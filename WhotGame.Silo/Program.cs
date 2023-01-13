@@ -1,4 +1,6 @@
+using Orleans;
 using Orleans.Hosting;
+using WhotGame.Silo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,8 +11,9 @@ builder.Host.UseOrleans((ctx, orleansBuilder) =>
         // During development time, we don't want to have to deal with
         // storage emulators or other dependencies. Just "Hit F5" to run.
         orleansBuilder
-            .UseLocalhostClustering(gatewayPort: 30000)
-            .AddMemoryGrainStorage("whot");
+            .UseLocalhostClustering(/*gatewayPort: 30000*/)
+            .AddMemoryGrainStorage("whot")
+            .UseDashboard(options =>  options.Port = 8000);
     }
     else
     {
@@ -25,7 +28,10 @@ builder.Host.UseOrleans((ctx, orleansBuilder) =>
 });
 
 // Add services to the container.
+builder.Services.AddEFDbContext(builder.Configuration);
 builder.Services.AddRazorPages();
+builder.Services.ConfigureAuthentication(builder.Configuration);
+builder.Services.AddAppSwagger();
 
 var app = builder.Build();
 
@@ -42,8 +48,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseAppSwagger();
+
 app.MapRazorPages();
+app.MapAppControllers();
 
 app.Run();
