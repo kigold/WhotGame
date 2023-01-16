@@ -1,19 +1,26 @@
 ﻿using Orleans;
 using Orleans.Runtime;
-using WhotGame.Abstractions.Enums;
+using WhotGame.Core.Enums;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
+using WhotGame.Core.Models.Requests;
 
 namespace WhotGame.Grains
 {
     public class GameGrain: Grain, IGameGrain
     {
-        private readonly IPersistentState<Game> _game;
+        private readonly IPersistentState<GameState> _game;
 
-        public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<Game> game) 
+        public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game) 
         { 
             _game = game;
+        }
+
+        public override Task OnActivateAsync()
+        {
+            _game.State.Id = this.GetGrainIdentity().PrimaryKeyLong;
+            return base.OnActivateAsync();
         }
 
         public Task<GameLite> GetGameAsync()
@@ -49,36 +56,49 @@ namespace WhotGame.Grains
             return await player.GetGameCardsAsync(_game.State.Id);            
         }
 
-        public async Task<bool> StartGameAsync(long creatorId, long[] playerIds, int cardCount = 10)
+        public async Task CreateGameAsync(long creatorId, CreateGameRequest request)
+        {
+            await StartGameAsync(creatorId, request.PlayerIds, request.IsPrivate, request.CardCount = 10);
+        }
+
+        public async Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount = 10)
         {
             //Init Game
             _game.State.CardCount = cardCount;
             _game.State.CreatorId = creatorId;
-            _game.State.PlayerIds = new[] { creatorId }.Concat(playerIds).ToArray();
+            _game.State.PlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
             _game.State.CurrentPlayerTurnIndex = 0;
 
-            //Send invitation to players
-            foreach (var playerId in playerIds)
-            {
-                var player = GrainFactory.GetGrain<PlayerGrain>(playerId);
-                await player.SendGameInvitationsAsync(_game.State.Id, _game.State.CreatorId);
-            }
 
-            //wait for 40 secs
             var readyPlayers = new List<long>();
-            var retry = 3;
-            if (!readyPlayers.Any() && retry > 0)
+            if (isPrivate)
             {
-                await Task.Delay(4000);
+                //Send invitation to players
                 foreach (var playerId in playerIds)
                 {
                     var player = GrainFactory.GetGrain<PlayerGrain>(playerId);
-                    var invitation = await player.GetGameInvitationAsync(_game.State.Id);
-
-                    if (invitation.Response ?? false)
-                        readyPlayers.Add(playerId);
+                    await player.SendGameInvitationsAsync(_game.State.Id, _game.State.CreatorId);
                 }
-                retry--;
+
+                //wait for 40 secs
+                var retry = 3;
+                while (!readyPlayers.Any() && retry > 0)
+                {
+                    await Task.Delay(4000);
+                    foreach (var playerId in playerIds)
+                    {
+                        var player = GrainFactory.GetGrain<PlayerGrain>(playerId);
+                        var invitation = await player.GetGameInvitationAsync(_game.State.Id);
+
+                        if (invitation.Response ?? false)
+                            readyPlayers.Add(playerId);
+                    }
+                    retry--;
+                }
+            }
+            else
+            {
+                await Task.Delay(36000); //wait for 120 seconds for people to join
             }
 
             //Generate Game Cards
@@ -95,6 +115,14 @@ namespace WhotGame.Grains
             }
 
             return readyPlayers.Any();
+        }
+
+        public Task AddPlayerAsync(long playerId)
+        {
+            if (_game.State.Status == GameStatus.Created && !_game.State.PlayerIds.Contains(playerId))
+                _game.State.PlayerIds.Add(playerId);
+
+            return Task.CompletedTask;
         }
 
         public Task<List<Card>> TryPickCardsAsync(long playerId, int count = 1)
@@ -153,10 +181,10 @@ namespace WhotGame.Grains
         {
             var turnIncreament = _game.State.PlayerTurnReversed ? -1 : 1;
 
-            _game.State.CurrentPlayerTurnIndex = (_game.State.CurrentPlayerTurnIndex + turnIncreament) % _game.State.PlayerIds.Length;
+            _game.State.CurrentPlayerTurnIndex = (_game.State.CurrentPlayerTurnIndex + turnIncreament) % _game.State.PlayerIds.Count;
         }
 
-        private void ShareCards(long[] playerIds)
+        private void ShareCards(List<long> playerIds)
         {
             var playerCards = new Dictionary<long, List<Card>>();
 

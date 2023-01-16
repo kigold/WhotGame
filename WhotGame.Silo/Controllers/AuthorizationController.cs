@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
-using WhotGame.Silo.Data;
+using WhotGame.Core.Data.Models;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace WhotGame.Silo.Controllers
@@ -101,6 +101,7 @@ namespace WhotGame.Silo.Controllers
                 identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
                 identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
                 identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
+                identity.AddClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
                 // Add more claims if necessary
 
                 foreach (var userRole in await _userManager.GetRolesAsync(user))

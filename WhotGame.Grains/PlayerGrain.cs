@@ -3,20 +3,35 @@ using Orleans.Runtime;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
+using WhotGame.Core.Models.Requests;
 
 namespace WhotGame.Grains
 {
     public class PlayerGrain : Grain, IPlayerGrain
     {
-        private readonly IPersistentState<Player> _player;
+        private readonly IPersistentState<PlayerState> _player;
+        public PlayerGrain([PersistentState("Player", "WhotGame")] IPersistentState<PlayerState> player)
+        {
+            _player = player;
+        }
 
         public Task<string> GetPlayerName()
         {
             return Task.FromResult(_player.State.Username);
         }
-        public PlayerGrain([PersistentState("Player", "WhotGame")] IPersistentState<Player> player)
+        public Task<GameInvitation[]> GetGameInvitationsAsync()
         {
-            _player = player;
+            return Task.FromResult(_player.State.Invitations.Select(x => x.Value).ToArray());
+        }
+
+        public Task<GameInvitation> GetGameInvitationAsync(long gameId)
+        {
+            return Task.FromResult(_player.State.Invitations[gameId]);
+        }
+
+        public Task<GameLite[]> GetGamesAsync()
+        {
+            return Task.FromResult(_player.State.Games.Select(x => x.Value).ToArray());
         }
 
         public Task<Card[]> GetGameCardsAsync(long gameId)
@@ -36,21 +51,6 @@ namespace WhotGame.Grains
             _player.State.GameCards[gameId].Concat(cards);
 
             return Task.CompletedTask;
-        }
-
-        public Task<GameInvitation[]> GetGameInvitationsAsync()
-        {
-            return Task.FromResult(_player.State.Invitations.Select(x => x.Value).ToArray());
-        }
-
-        public Task<GameInvitation> GetGameInvitationAsync(long gameId)
-        {
-            return Task.FromResult(_player.State.Invitations[gameId]);
-        }
-
-        public Task<GameLite[]> GetGamesAsync()
-        {
-            return Task.FromResult(_player.State.Games.Select(x => x.Value).ToArray());
         }
 
         public Task SendGameInvitationsAsync(long gameId, long playerId)

@@ -1,23 +1,24 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using WhotGame.Silo.Data;
-using WhotGame.Silo.Data.Context;
-using static OpenIddict.Abstractions.OpenIddictConstants;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenIddict.Validation.AspNetCore;
-using Microsoft.AspNetCore.Authorization;
+using WhotGame.Core.Data.Models;
+using WhotGame.Core.Data.Context;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+using WhotGame.Core.Data.Repositories;
 
 namespace WhotGame.Silo
 {
     public static class ConfigurationExtensions
     {
+        public static void AddServices(this IServiceCollection services)
+        {
+            services.AddTransient<IRepository<Game>, Repository<Game>>();
+        }
+
         public static void AddEFDbContext(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("Default");
@@ -93,9 +94,6 @@ namespace WhotGame.Silo
                 {
                     NameClaimType = Claims.Name,
                     RoleClaimType = Claims.Role,
-                    //IssuerSigningKey = signingKey,
-                    //ValidateAudience = authSettings.ValidateAudience,
-                    //ValidateIssuer = authSettings.ValidateIssuer,
                 };
 
                 options.Events = new JwtBearerEvents

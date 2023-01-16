@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace WhotGame.Silo.Data
+namespace WhotGame.Core.Data.Models
 {
     public class User : IdentityUser<long>
     {

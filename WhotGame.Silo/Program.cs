@@ -12,7 +12,7 @@ builder.Host.UseOrleans((ctx, orleansBuilder) =>
         // storage emulators or other dependencies. Just "Hit F5" to run.
         orleansBuilder
             .UseLocalhostClustering(/*gatewayPort: 30000*/)
-            .AddMemoryGrainStorage("whot")
+            .AddMemoryGrainStorage("WhotGame")
             .UseDashboard(options =>  options.Port = 8000);
     }
     else
@@ -28,6 +28,7 @@ builder.Host.UseOrleans((ctx, orleansBuilder) =>
 });
 
 // Add services to the container.
+builder.Services.AddServices();
 builder.Services.AddEFDbContext(builder.Configuration);
 builder.Services.AddRazorPages();
 builder.Services.ConfigureAuthentication(builder.Configuration);

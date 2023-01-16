@@ -1,4 +1,4 @@
-﻿namespace WhotGame.Abstractions.Enums
+﻿namespace WhotGame.Core.Enums
 {
     public enum CardShape
     {

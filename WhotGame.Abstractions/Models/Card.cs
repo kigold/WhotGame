@@ -1,4 +1,4 @@
-﻿using WhotGame.Abstractions.Enums;
+﻿using WhotGame.Core.Enums;
 
 namespace WhotGame.Abstractions.Models
 {

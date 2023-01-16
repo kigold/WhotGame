@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using WhotGame.Core.Data.Models;
 
-namespace WhotGame.Silo.Data.Context
+namespace WhotGame.Core.Data.Context
 {
     public class AppDbContext : DbContext
     {
@@ -21,6 +23,7 @@ namespace WhotGame.Silo.Data.Context
         public DbSet<UserRole> UserRole { get; set; }
         public DbSet<UserClaim> UserClaims { get; set; }
         public DbSet<IdentityRoleClaim<long>> RoleClaims { get; set; }
+        public DbSet<Game> Games { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

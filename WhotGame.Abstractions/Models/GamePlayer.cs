@@ -4,7 +4,7 @@
     {
         public long GameId { get; set; }
         public long PlayerId { get; set; }
-        public Game Game { get; set; }
-        public Player Player { get; set; }
+        public GameState Game { get; set; }
+        public PlayerState Player { get; set; }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Orleans;
-using WhotGame.Abstractions.Enums;
 using WhotGame.Abstractions.Models;
 
 namespace WhotGame.Abstractions.GrainTypes

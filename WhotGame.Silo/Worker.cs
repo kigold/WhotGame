@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using WhotGame.Silo.Data;
-using WhotGame.Silo.Data.Context;
+using WhotGame.Core.Data.Context;
+using WhotGame.Core.Data.Models;
 
 namespace WhotGame.Silo
 {

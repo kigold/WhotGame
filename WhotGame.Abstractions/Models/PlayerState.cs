@@ -1,8 +1,8 @@
-﻿using WhotGame.Abstractions.Enums;
+﻿using WhotGame.Core.Enums;
 
 namespace WhotGame.Abstractions.Models
 {
-    public class Player
+    public class PlayerState
     {
         public long Id { get; set; }
         public string Username { get; set; } = string.Empty;

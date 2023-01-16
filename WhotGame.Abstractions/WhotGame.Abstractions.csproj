@@ -14,4 +14,8 @@
     <PackageReference Include="Microsoft.Orleans.Runtime.Abstractions" Version="3.6.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\WhotGame.Core\WhotGame.Core.csproj" />
+  </ItemGroup>
+
 </Project>

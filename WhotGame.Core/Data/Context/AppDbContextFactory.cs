@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore;
 
-namespace WhotGame.Silo.Data.Context
+namespace WhotGame.Core.Data.Context
 {
     public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
