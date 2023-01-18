@@ -1,5 +1,6 @@
 using Orleans;
 using Orleans.Hosting;
+using WhotGame.Grains;
 using WhotGame.Silo;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,12 @@ builder.Host.UseOrleans((ctx, orleansBuilder) =>
         orleansBuilder
             .UseLocalhostClustering(/*gatewayPort: 30000*/)
             .AddMemoryGrainStorage("WhotGame")
+            .UseInMemoryReminderService()
+            //.ConfigureApplicationParts(x =>
+            //{
+            //    x.AddApplicationPart(typeof(GameGrain).Assembly).WithReferences();
+            //    x.AddApplicationPart(typeof(PlayerGrain).Assembly).WithReferences();
+            //})
             .UseDashboard(options =>  options.Port = 8000);
     }
     else

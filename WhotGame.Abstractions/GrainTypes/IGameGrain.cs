@@ -7,7 +7,8 @@ namespace WhotGame.Abstractions.GrainTypes
 {
     public interface IGameGrain : IGrainWithIntegerKey
     {
-        Task<GameLite> GetGameAsync();
+        Task<GameLite> GetGamesAsync();
+        Task<GameStats> GetGameStatsAsync();
         Task CreateGameAsync(long creatorId, CreateGameRequest request);
         Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount); //Create Game and Send Invitation to players and then start the game
         Task<PlayerGameScore[]> GetGameLeaderboardAsync(); //should only return when the game has ended
@@ -16,6 +17,6 @@ namespace WhotGame.Abstractions.GrainTypes
 
         Task<Card[]> GetPlayerGameCardsAsync(long playerId);
         //Task<Card> TryPickCardAsync();
-        Task TryPlayCard(long playerId, int cardId, CardColor? cardColor);
+        Task<bool> TryPlayCard(long playerId, int cardId, CardColor? cardColor);
     }
 }

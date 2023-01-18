@@ -5,7 +5,7 @@ namespace WhotGame.Abstractions.GrainTypes
 {
     public interface IPlayerGrain : IGrainWithIntegerKey
     {
-        Task<string> GetPlayerName();
+        Task<PlayerLite> GetPlayerAsync();
         Task<GameLite[]> GetGamesAsync();
         Task<Card[]> GetGameCardsAsync(long gameId);
         public Task SetGameCardsAsync(long gameId, List<Card> cards);

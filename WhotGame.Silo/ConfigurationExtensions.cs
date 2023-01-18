@@ -17,6 +17,7 @@ namespace WhotGame.Silo
         public static void AddServices(this IServiceCollection services)
         {
             services.AddTransient<IRepository<Game>, Repository<Game>>();
+            services.AddTransient<IRepository<User>, Repository<User>>();
         }
 
         public static void AddEFDbContext(this IServiceCollection services, IConfiguration configuration)
