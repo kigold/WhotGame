@@ -8,29 +8,73 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
 using WhotGame.Core.Data.Models;
+using WhotGame.Core.Data.Repositories;
+using WhotGame.Silo.ViewModels;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace WhotGame.Silo.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
-    [AllowAnonymous]
-    public class AuthorizationController : ControllerBase
+    public class AuthorizationController : BaseController
     {
         private readonly IOpenIddictApplicationManager _applicationManager;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<Role> _roleManager;
+        private readonly IRepository<User> _userRepo;
 
-        public AuthorizationController(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Role> roleManager, IOpenIddictApplicationManager applicationManager)
+        public AuthorizationController(UserManager<User> userManager, 
+            SignInManager<User> signInManager, 
+            RoleManager<Role> roleManager, 
+            IOpenIddictApplicationManager applicationManager,
+            IRepository<User> userRepo, 
+            IHttpContextAccessor httpContext)
+            :base(httpContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _applicationManager = applicationManager;
             _roleManager = roleManager;
+            _userRepo = userRepo;
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateUser(CreateUserRequest request)
+        {
+            if (await _userManager.FindByNameAsync(request.Email) is not null)
+                return BadRequest("User already exists");
+
+            var user = new User
+            {
+                Email = request.Email,
+                UserName = request.Email,
+                Firstname = request.Firstname,
+                Lastname = request.Lastname,
+            };
+
+            var hash = _userManager.PasswordHasher.HashPassword(user, "P@ssw0rd");
+            user.PasswordHash = hash;
+            var result = await _userManager.CreateAsync(user);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors.First());
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: new UserResponse(user.Id, user.Email, user.Firstname, user.Lastname));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsers()
+        {
+            //TODO Paginate
+            var users = _userRepo.Get().ToList();
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: users.Select(x => new UserResponse(x.Id, x.Email, x.Firstname, x.Lastname)));
         }
 
         [HttpPost("~/connect/token"), Produces("application/json")]
+        [AllowAnonymous]
         public async Task<IActionResult> Exchange()
         {
             var request = HttpContext.GetOpenIddictServerRequest();
@@ -74,7 +118,7 @@ namespace WhotGame.Silo.Controllers
                 var user = await _userManager.GetUserAsync(info.Principal);
                 if (user == null)
                 {
-                    var properties = new AuthenticationProperties(new Dictionary<string, string>
+                    var properties = new AuthenticationProperties(new Dictionary<string, string?>
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The refresh token is no longer valid."
@@ -85,7 +129,7 @@ namespace WhotGame.Silo.Controllers
 
                 if (!await _signInManager.CanSignInAsync(user))
                 {
-                    var properties = new AuthenticationProperties(new Dictionary<string, string>
+                    var properties = new AuthenticationProperties(new Dictionary<string, string?>
                     {
                         [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
                         [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The user is no longer allowed to sign in."
