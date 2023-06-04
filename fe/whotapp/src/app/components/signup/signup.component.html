@@ -1,0 +1,23 @@
+<div class="container">
+    <h3>Signup</h3>
+    <mat-form-field class="field">
+        <mat-label>Firstname</mat-label>
+        <input matInput [(ngModel)]="model.firstname" placeholder="Firstname">
+      </mat-form-field>
+      <mat-form-field class="field">
+        <mat-label>Lastname</mat-label>
+        <input matInput [(ngModel)]="model.lastname" placeholder="Lastname">
+      </mat-form-field>
+    <mat-form-field class="field">
+      <mat-label>Email</mat-label>
+      <input matInput [(ngModel)]="model.email" placeholder="john@doe.com">
+    </mat-form-field>
+    <mat-form-field class="field">
+        <mat-label>Password</mat-label>
+        <input type="password" matInput [(ngModel)]="model.password">
+      </mat-form-field>
+    <button class="field" mat-raised-button color="primary" (click)="signup()">Submit</button>
+    <div class="toggle-btn">
+      <button class="field" mat-stroked-button color="warn" (click)="toggle()">Login</button>
+    </div>
+    </div>

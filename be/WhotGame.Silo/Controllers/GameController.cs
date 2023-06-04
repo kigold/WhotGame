@@ -25,13 +25,13 @@ namespace WhotGame.Silo.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<List<GameLite>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<List<GameResponse>>), 200)]
         public async Task<IActionResult> GetGames()
         {
             //var user = GetCurrentUser();
             //var player = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
             //var games = await player.GetGamesAsync();
-            var games = _gameRepo.Get().ToList();
+            var games = _gameRepo.Get().ToList().Select(x => (GameResponse)x);
 
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: games);
         }

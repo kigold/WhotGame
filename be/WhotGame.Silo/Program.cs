@@ -56,6 +56,15 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseCors(x =>
+{
+    //x.WithOrigins("http://localhost:8080")
+    x.AllowAnyOrigin()
+             .AllowAnyMethod()
+             .AllowAnyHeader();
+    //.AllowCredentials();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

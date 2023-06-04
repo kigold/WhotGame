@@ -1,0 +1,10 @@
+.container {
+    display: grid;
+    background-color: #ccc2cf;
+    padding: 2em 2em 2em 2em;
+
+}
+
+.toggle-btn {
+    justify-self: center;
+}
