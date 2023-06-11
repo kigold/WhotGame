@@ -87,9 +87,26 @@ namespace WhotGame.Silo.Controllers
             _gameRepo.Insert(game);
             await _gameRepo.SaveChangesAsync();
 
+            game.Name = GenerateGameName(game.Id);
+            await _gameRepo.SaveChangesAsync();
+
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
             await gameGrain.CreateGameAsync(user.UserId, request);
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
+        }
+
+        private string GenerateGameName(long id)
+        {
+            var alphabets = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            id = 100 + id;
+            var result = "";
+
+            foreach (var c in id.ToString())
+            {
+                char x = (char)(c + 65);
+                result += alphabets[c % 52];
+            }
+            return result;
         }
 
         [HttpPost("{gameId}")]

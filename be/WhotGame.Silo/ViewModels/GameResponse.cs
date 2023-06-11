@@ -5,6 +5,7 @@ namespace WhotGame.Silo.ViewModels
 {
     public class GameResponse
     {
+        public string Name { get; set; }
         public long Id { get; set; }
         public string Status { get; set; }
         public DateTime DateCreated { get; set; }
@@ -15,6 +16,7 @@ namespace WhotGame.Silo.ViewModels
         {
             return model == null ? new GameResponse() : new GameResponse
             {
+                Name = model.Name,
                 CreatorId = model.CreatorId,
                 DateCreated = model.DateCreated,
                 Id = model.Id,
