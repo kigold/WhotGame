@@ -1,5 +1,6 @@
 ﻿using Orleans;
 using WhotGame.Abstractions.Models;
+using WhotGame.Core.Enums;
 
 namespace WhotGame.Abstractions.GrainTypes
 {
@@ -10,7 +11,7 @@ namespace WhotGame.Abstractions.GrainTypes
         Task<Card[]> GetGameCardsAsync(long gameId);
         public Task SetGameCardsAsync(long gameId, List<Card> cards);
         Task AddCardsAsync(long gameId, List<Card> cards);
-        Task<Card> TryPlayCardAsync(long gameId, int cardId, Card cardToMatch);
+        Task<Card> TryPlayCardAsync(long gameId, int cardId, CardColor? color, CardShape? shape, Card cardToMatch, bool hasPendingPick2, bool hasPendingPick4);
         Task<GameInvitation[]> GetGameInvitationsAsync();
         Task<GameInvitation> GetGameInvitationAsync(long gameId);
         Task SendGameInvitationsAsync(long gameId, long playerId);

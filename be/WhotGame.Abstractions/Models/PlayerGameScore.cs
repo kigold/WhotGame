@@ -2,9 +2,8 @@
 {
     public class PlayerGameScore
     {
-        public long GameId { get; set; }
-        public long PlayerId { get; set; }
+        public PlayerLite Player { get; set; }
         public int TotalValue { get; set; }
-        //public bool Winner { get; set; }
+        public bool Winner { get; set; }
     }
 }
