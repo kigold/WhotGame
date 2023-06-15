@@ -16,7 +16,7 @@ namespace WhotGame.Silo
         public async Task Invoke(HttpContext context)
         {
             try
-            {
+            {k
                 await _next(context);
             }
             catch (Exception error)
