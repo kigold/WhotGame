@@ -70,6 +70,9 @@ app.UseAuthorization();
 
 app.UseAppSwagger();
 
+// global error handler
+app.UseMiddleware<ErrorHandlerMiddleware>();
+
 app.MapRazorPages();
 app.MapAppControllers();
 

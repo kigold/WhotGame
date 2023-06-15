@@ -48,6 +48,16 @@ namespace WhotGame.Silo.Controllers
         }
 
         [HttpGet("{gameId}")]
+        [ProducesResponseType(typeof(ApiResponse<GameStats>), 200)]
+        public async Task<IActionResult> GetGameLeaderboard(long gameId)
+        {
+            var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
+            var gameLeaderboard = await gameGrain.GetGameLeaderboardAsync();
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: gameLeaderboard);
+        }
+
+        [HttpGet("{gameId}")]
         [ProducesResponseType(typeof(ApiResponse<Card[]>), 200)]
         public async Task<IActionResult> GetGameCard(long gameId)
         {
@@ -55,7 +65,7 @@ namespace WhotGame.Silo.Controllers
             var playerGrain = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
             var cards = await playerGrain.GetGameCardsAsync(gameId);
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards, totalCount: cards.Length);
         }
 
         [HttpGet("{gameId}")]
@@ -67,7 +77,7 @@ namespace WhotGame.Silo.Controllers
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
             var cards = await gameGrain.GetPlayerGameCardsAsync(playerId: user.UserId);
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards, totalCount: cards.Length);
         }
 
         [HttpPost]
@@ -128,18 +138,18 @@ namespace WhotGame.Silo.Controllers
         {
             var user = GetCurrentUser();
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(model.GameId);
-            var result = await gameGrain.TryPlayCard(user.UserId, model.CardId, model.CardColor);
+            var result = await gameGrain.TryPlayCard(user.UserId, model.CardId, model.CardColor, model.CardShape);
 
             return result ? ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "") : ApiResponse(message: "failed", codes: ApiResponseCodes.ERROR, data: "", errors: new string [] {"Failed to play card"} );
         }
 
-        [HttpPost]
+        [HttpPost("{gameId}")]
         [ProducesResponseType(typeof(ApiResponse<List<Card>>), 200)]
-        public async Task<IActionResult> PickCards(PickCardRequest model)
+        public async Task<IActionResult> PickCards(long gameId)
         {
             var user = GetCurrentUser();
-            var gameGrain = _grainFactory.GetGrain<IGameGrain>(model.GameId);
-            var result = await gameGrain.TryPickCardsAsync(user.UserId, model.CardsCount);
+            var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
+            var result = await gameGrain.TryPickCardsAsync(user.UserId);
 
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: result);
         }
@@ -163,7 +173,7 @@ namespace WhotGame.Silo.Controllers
 //TODO get endpoint to show game Last Card Played, Last Player, Current Player Turn, How Many Market Remaining Last Activity
 /*
 #  add Validation for player turn
-*Add logic for special Cards
+# Add logic for special Cards
 # Add ReadyPlayers to GameStats
 # Add IsReverse to GameStats
 # Add Status to GameStats
@@ -171,4 +181,22 @@ namespace WhotGame.Silo.Controllers
 # Fix Pick card Bug, the card is not added to players cards`
 # Fix Update GameActivity TIme
 # Feat Add End Of Game To GameLOg
-# Add LeaderBoard endpoint*/
+# Add LeaderBoard endpoint
+
+# Log Activity Time When Game is Started
+# Handle ValidationException and return correct message
+* refactor, Log for play for Gen market b4 picking
+* Check and Test Logic for pick2-4 and rebound
+# FIX CurrentPlayerTurnIndex, it should not have a negative value
+ The fix is, when the index negative it should be added to the Length 
+that is , 3 + (-1) = 2, and When it is positive we leave as is, that is
+
+# in Generate Card Make card Id start from 1
+# add and then find modulus
+# Check player turn if it flows correctly
+# check pick 4 increament
+- Joker should not have color or shape// This might not be an issue
+# Joker should need both color and shape
+- Do not allow any action after game has ended //Might not be an issue as it is the winners turn but he has no cards
+# Update Leaderboard endpoint to display winner and order the players according to their total value
+# Add Number of cards to Leaderboard*/

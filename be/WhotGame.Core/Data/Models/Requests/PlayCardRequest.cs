@@ -10,5 +10,6 @@ namespace WhotGame.Core.Data.Models.Requests
         [Required]
         public int CardId { get; set; }
         public CardColor? CardColor { get; set; }
+        public CardShape? CardShape { get; set; }
     }
 }

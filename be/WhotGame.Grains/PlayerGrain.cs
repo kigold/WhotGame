@@ -1,10 +1,13 @@
 ﻿using Orleans;
 using Orleans.Runtime;
+using System.ComponentModel.DataAnnotations;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Repositories;
+using WhotGame.Core.Enums;
+using static WhotGame.Grains.Constants;
 
 namespace WhotGame.Grains
 {
@@ -93,12 +96,24 @@ namespace WhotGame.Grains
                 _player.State.Games[gameId] = await gameGrain.GetGamesAsync();
         }
 
-        public Task<Card> TryPlayCardAsync(long gameId, int cardId, Card cardToMatch)
+        public Task<Card> TryPlayCardAsync(long gameId, int cardId, CardColor? color, CardShape? shape, Card cardToMatch, bool hasPendingPick2, bool hasPendingPick4)
         {
-            var card = _player.State.GameCards[gameId].FirstOrDefault(x => x.Id == cardId);
+            var card = _player.State.GameCards[gameId].First(x => x.Id == cardId);
+
+            if (hasPendingPick2 || hasPendingPick4) // if player received pick2 or pick4, they are axpected to reply accordingly or pick the cards
+            {
+                if (hasPendingPick2 && !string.Equals(card.Name, PICK2))
+                    throw new ValidationException("Pick 2 or reply by playing Pick2");
+
+                if (hasPendingPick4 && !string.Equals(card.Name, PICK4))
+                    throw new ValidationException("Pick 4 or reply by playing Pick4");
+            }
+
+            if (string.Equals(card.Name, JOKER) && (color == null || shape == null))
+                throw new ValidationException("Card Color and Card Shape is required for Joker Card");
 
             if (!ValidateCard(card, cardToMatch))
-                return Task.FromResult((Card)null);
+                throw new ValidationException("Card does not tally with last played card");
 
             return Task.FromResult(_player.State.GameCards[gameId].Pop(card));
         }
@@ -107,7 +122,7 @@ namespace WhotGame.Grains
         {
             return cardToMatch.Color == card.Color ||
                 cardToMatch.Shape == card.Shape ||
-                string.Equals(cardToMatch.Name, card.Name);
+                string.Equals(cardToMatch.Name, card.Name) || (card.IsSpecial && string.Equals(card.Name, JOKER));
         }
     }
 }

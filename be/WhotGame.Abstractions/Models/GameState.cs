@@ -58,6 +58,8 @@ namespace WhotGame.Abstractions.Models
         public List<string> GameLog { get; set; }
         public bool IsTurnReversed { get; set; }
         public PlayerLite[] Players { get; set; }
+        public int Pick2Count { get; set; }
+        public int Pick4Count { get; set; }
     }
 }
 
