@@ -1,6 +1,8 @@
-﻿using Orleans;
+﻿using Microsoft.AspNetCore.SignalR;
+using Orleans;
 using Orleans.Runtime;
 using System.ComponentModel.DataAnnotations;
+using WhoteGame.Services;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
@@ -12,18 +14,21 @@ namespace WhotGame.Grains
 {
     public class GameGrain: Grain, IGameGrain
     {
+        private readonly IHubContext<GameHub> _gameHub;
         private readonly IPersistentState<GameState> _game;
         private List<PlayerLite> _players = new List<PlayerLite>();
         private int _checkInvitationRetry = 3;
-        private IDisposable _timer;
+        private IDisposable? _timer;
         private DateTime _lastActivityTime;
         private int _pick2Multiplier = 0;
         private int _pick4Multiplier = 0;
         private bool _skipOnePlayer = false;
 
-        public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game) 
+        public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
+            IHubContext<GameHub> gameHub) 
         { 
             _game = game;
+            _gameHub = gameHub;
         }
 
         public override Task OnActivateAsync()
@@ -225,7 +230,7 @@ namespace WhotGame.Grains
             //Reset pick2 and Pick4 Counter
             _pick2Multiplier = 0;
             _pick4Multiplier = 0;
-            UpdatePlayerTurn();
+            await UpdatePlayerTurn();
             return cards;
         }
 
@@ -271,7 +276,7 @@ namespace WhotGame.Grains
                 return true;
             }
             _game.State.LastPlayerId= playerId;
-            UpdatePlayerTurn();
+            await UpdatePlayerTurn();
             return true;
         }
 
@@ -324,7 +329,7 @@ namespace WhotGame.Grains
             //TODO do cleanup after game ends
         }
 
-        private void UpdatePlayerTurn()
+        private async Task UpdatePlayerTurn()
         {
             int increamentValue = _skipOnePlayer ? 2 : 1;
 
@@ -336,6 +341,8 @@ namespace WhotGame.Grains
             _game.State.CurrentPlayerTurnIndex = _game.State.CurrentPlayerTurnIndex > 0 
                 ? _game.State.CurrentPlayerTurnIndex % _game.State.ReadyPlayerIds.Count :
                 (_game.State.CurrentPlayerTurnIndex + _game.State.ReadyPlayerIds.Count) % _game.State.ReadyPlayerIds.Count;
+            //TODO send player turn to all players
+            await GameHub.BroadcastUpdateTurn(_gameHub, _game.State.Id, _players[_game.State.CurrentPlayerTurnIndex]);
         }
         private async Task PopulateReadyPlayersDetails()
         {
@@ -419,3 +426,4 @@ namespace WhotGame.Grains
 }
 
 //TODO Either User ReadyPlayerIds or PlayerIds, not both
+//TODO I might have to move stuff that I need to be persisted to the grain state

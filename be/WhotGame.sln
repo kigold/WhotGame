@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhotGame.Grains", "WhotGame
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhotGame.Silo", "WhotGame.Silo\WhotGame.Silo.csproj", "{92787A3D-73CE-422E-A988-67032DFD581F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhotGame.Core", "WhotGame.Core\WhotGame.Core.csproj", "{E103CD07-DA3D-4069-99DB-03E9934660FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhotGame.Core", "WhotGame.Core\WhotGame.Core.csproj", "{E103CD07-DA3D-4069-99DB-03E9934660FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhoteGame.Services", "WhoteGame.Services\WhoteGame.Services.csproj", "{0DFE38FA-4DEE-4956-B885-2FAE10A95D7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{E103CD07-DA3D-4069-99DB-03E9934660FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E103CD07-DA3D-4069-99DB-03E9934660FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E103CD07-DA3D-4069-99DB-03E9934660FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DFE38FA-4DEE-4956-B885-2FAE10A95D7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DFE38FA-4DEE-4956-B885-2FAE10A95D7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DFE38FA-4DEE-4956-B885-2FAE10A95D7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DFE38FA-4DEE-4956-B885-2FAE10A95D7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

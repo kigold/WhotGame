@@ -9,6 +9,8 @@ using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Repositories;
+using WhotGame.Core.DTO.Requests;
+using WhotGame.Core.DTO.Response;
 using WhotGame.Silo.ViewModels;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -142,10 +144,7 @@ namespace WhotGame.Silo.Controllers
                     OpenIddictConstants.Claims.Name,
                     OpenIddictConstants.Claims.Role);
 
-                identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
+                AddUserClaims(user, identity);
                 // Add more claims if necessary
 
                 foreach (var userRole in await _userManager.GetRolesAsync(user))
@@ -186,9 +185,7 @@ namespace WhotGame.Silo.Controllers
                     OpenIddictConstants.Claims.Name,
                     OpenIddictConstants.Claims.Role);
 
-                identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
+                AddUserClaims(user, identity);
                 // Add more claims if necessary
 
                 foreach (var userRole in await _userManager.GetRolesAsync(user))
@@ -210,6 +207,14 @@ namespace WhotGame.Silo.Controllers
             }
             else
                 return Unauthorized();
+        }
+
+        private static void AddUserClaims(User user, ClaimsIdentity identity)
+        {
+            identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
         }
 
     }

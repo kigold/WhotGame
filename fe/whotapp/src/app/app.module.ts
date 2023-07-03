@@ -20,6 +20,7 @@ import { SignupComponent } from './components/signup/signup.component';
 import { AuthService } from './services/auth.service';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { HeaderInterceptor } from './interceptors/header.interceptor';
+import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 
 @NgModule({
   declarations: [
@@ -28,13 +29,14 @@ import { HeaderInterceptor } from './interceptors/header.interceptor';
     GameComponent,
     LoginComponent,
     SignupComponent,
+    PageNotFoundComponent,
   ],
   imports: [
     AppRoutingModule,
     BrowserModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    BrowserAnimationsModule,    
+    BrowserAnimationsModule,
     FormsModule,
     MatToolbarModule,
     MatButtonModule,
@@ -47,7 +49,7 @@ import { HeaderInterceptor } from './interceptors/header.interceptor';
   ],
   providers: [
     AuthService,
-    { 
+    {
       provide: HTTP_INTERCEPTORS, useClass: HeaderInterceptor, multi:true
     }
   ],

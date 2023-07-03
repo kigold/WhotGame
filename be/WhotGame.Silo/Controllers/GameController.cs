@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Orleans;
+using WhoteGame.Services;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
@@ -16,12 +18,50 @@ namespace WhotGame.Silo.Controllers
     {
         private readonly IGrainFactory _grainFactory;
         private readonly IRepository<Game> _gameRepo;
+        private readonly IHubContext<GameHub> _gameHub;
 
-        public GameController(IGrainFactory grainFactory, IHttpContextAccessor httpContext, IRepository<Game> gameRepo)
+        public GameController(IGrainFactory grainFactory,
+            IHttpContextAccessor httpContext,
+            IRepository<Game> gameRepo,
+            IHubContext<GameHub> gameHub)
             :base(httpContext)
         { 
             _grainFactory = grainFactory;
             _gameRepo = gameRepo;
+            _gameHub = gameHub;
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> GetConnectionId()
+        {
+            var user = GetCurrentUser();
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: $"connect_player_{user.UserId}");
+        }
+
+        [HttpPost("{group}")]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> SendGroup(long group, PlayerLite player)
+        {
+            await _gameHub.Clients.Group($"connect_game_{group}").SendAsync("Game", player);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
+        }
+
+        [HttpPost("{playerId}")]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> SendPlayer(long playerId, PlayerLite player)
+        {
+            await _gameHub.Clients.Group($"connect_player_{playerId}").SendAsync("player", player);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
+        }
+
+        [HttpPost("{playerId}")]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> Send(long playerId, PlayerLite player)
+        {
+            await _gameHub.Clients.User($"{playerId}").SendAsync("Testp", player);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
         }
 
         [HttpGet]
@@ -85,7 +125,6 @@ namespace WhotGame.Silo.Controllers
         public async Task<IActionResult> CreateGame(CreateGameRequest request)
         {
             var user = GetCurrentUser();
-            var playerGrain = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
 
             var game = new Game
             {
@@ -102,6 +141,7 @@ namespace WhotGame.Silo.Controllers
 
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
             await gameGrain.CreateGameAsync(user.UserId, request);
+            await GameHub.BroadcastNewGame(_gameHub, game);
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
         }
 

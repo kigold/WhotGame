@@ -1,9 +1,11 @@
-<mat-toolbar class="toolbar" color="primary">  
-  <h1>  
+<mat-toolbar class="toolbar" color="primary">
+  <h1>
   Whot Game
-  </h1>  
-  <button mat-button routerLink="/">Home</button>  
-  <button mat-button routerLink="/game">Game</button>
+  </h1>
+  <button mat-button routerLink="/">Home</button>
+  <button mat-button routerLink="/game">Games</button>
+  <!-- <a [routerLink]="['/Game', '1']">Game </a> -->
+  <button mat-button [routerLink]="['/game', '1']">Game</button>
   <button class="push" (click)="logout()" mat-icon-button aria-label="Logout">
     <mat-icon>exit_to_app</mat-icon>
   </button>

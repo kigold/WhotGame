@@ -9,6 +9,7 @@ using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Context;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 using WhotGame.Core.Data.Repositories;
+using WhoteGame.Services;
 
 namespace WhotGame.Silo
 {
@@ -18,6 +19,7 @@ namespace WhotGame.Silo
         {
             services.AddTransient<IRepository<Game>, Repository<Game>>();
             services.AddTransient<IRepository<User>, Repository<User>>();
+            services.AddScoped<IRealTimeClient, RealTimeClient>();
         }
 
         public static void AddEFDbContext(this IServiceCollection services, IConfiguration configuration)
@@ -104,6 +106,20 @@ namespace WhotGame.Silo
                         if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                         {
                             context.Response.Headers.Add("Token-Expired", "true");
+                        }
+                        return Task.CompletedTask;
+                    },
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/gameHub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
                         }
                         return Task.CompletedTask;
                     }
