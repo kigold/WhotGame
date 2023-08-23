@@ -3,8 +3,13 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { LoginComponent } from 'src/app/components/login/login.component';
 import { SignupComponent } from 'src/app/components/signup/signup.component';
 import { LoginRequest, LoginResponseModel, SignupRequest, User } from 'src/app/models/auth';
+import { Game } from 'src/app/models/games';
 import { AuthService } from 'src/app/services/auth.service';
+import { GameService } from 'src/app/services/game.service';
 import { HelperService } from 'src/app/services/helper.service';
+import {MatListModule} from '@angular/material/list';
+import { HubClientService } from 'src/app/services/hub-client.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -18,25 +23,65 @@ export class HomeComponent {
   loginDialogRef: MatDialogRef<LoginComponent, any> = <MatDialogRef<LoginComponent, any>>{}
   signupDialogRef: MatDialogRef<SignupComponent, any> = <MatDialogRef<SignupComponent, any>>{}
   loginResponse: LoginResponseModel = <LoginResponseModel>{};
+  games = signal(<Game[]>[]);
 
-  constructor(public dialog: MatDialog, private authService: AuthService) {
+  constructor(public dialog: MatDialog, private authService: AuthService,
+    private gameService: GameService, private hubClient: HubClientService,
+    private router: Router) {
   }
 
   ngOnInit(){
-    if (!this.isLoggedIn())
-    {
+    if (!this.isLoggedIn()){
       this.showLogin = true;
       this.openLoginDialog();
     }
+    else{
+      this.gameService.getGames()
+      .subscribe({
+        next: (res) => {
+          this.games.set(res.payload)
+          console.log(res.payload)
+        },
+        error: (e) => this.gameService.handleError(e)
+      })
+
+      this.gameService.getActiveGame()
+      .subscribe({
+        next: (response) => {
+          if (!response.hasError){
+            console.log("Active game found", response.payload)
+            this.router.navigate([`game/${response.payload.id}`])
+          }
+        },
+        error: (e) => console.log("No Active games found.")
+      });
+
+      //Listen for New Games and Add to list
+      this.hubClient.connect();
+      this.games = this.hubClient.onNewGame()
+    }
+  }
+
+  play(){
+    console.log("seeking Game");
+    this.hubClient.seekGame();
+    this.gameService.joinGame()
+    .subscribe({
+      next: (gameResponse) => {
+       console.log("Joining Game: ", gameResponse.payload)
+       this.router.navigate([`game/${gameResponse.payload.id}`])
+      },
+      error: (error) => {this.gameService.handleError(error)}
+    })
   }
 
   isLoggedIn(){
-    const user = this.authService.getUserProfile(); 
+    const user = this.authService.getUserProfile();
     if (user == undefined)
       return false;
-    this.profile.mutate(value => { 
-      value.id = user.id, 
-      value.name = user.name, 
+    this.profile.mutate(value => {
+      value.id = user.id,
+      value.name = user.name,
       value.username = user.username
     })
     return true;
@@ -64,19 +109,19 @@ export class HomeComponent {
     else{
       this.showSignup = false;
       this.signupDialogRef.close();
-      this.showLogin = true;    
+      this.showLogin = true;
       this.openLoginDialog();
     }
   }
 
   onLogin(request: LoginRequest){
-    this.authService.login(request)			
+    this.authService.login(request)
     .subscribe({
       next: (res) => {
         let user = this.authService.storeAuthInLocalStorage(res);
-        this.profile.mutate(value => { 
-          value.id = user.id, 
-          value.name = user.name, 
+        this.profile.mutate(value => {
+          value.id = user.id,
+          value.name = user.name,
           value.username = user.username
         });
         this.loginDialogRef.close();

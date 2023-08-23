@@ -14,7 +14,6 @@ namespace WhotGame.Silo.ViewModels
     {
         public T Payload { get; set; } = default;
         public int TotalCount { get; set; }
-        public string ResponseCode { get; set; }
 
         public ApiResponse(T data = default, string message = "",
             ApiResponseCodes codes = ApiResponseCodes.OK, int? totalCount = 0, params string[] errors)

@@ -1,7 +1,6 @@
 ﻿using WhotGame.Core.Data.Models;
-using WhotGame.Core.Enums;
 
-namespace WhotGame.Silo.ViewModels
+namespace WhotGame.Core.DTO.Response
 {
     public class GameResponse
     {

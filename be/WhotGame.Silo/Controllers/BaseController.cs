@@ -21,7 +21,7 @@ namespace WhotGame.Silo.Controllers
         {
             var response = new ApiResponse<T>(data, message, codes, totalCount, errors);
             response.Description = message ?? response.Code.ToString();
-            return Ok(response);
+            return codes == ApiResponseCodes.OK ? Ok(response) : BadRequest(response);
         }
 
         public async Task<IActionResult> Process<T>(Func<Task<ResultModel<T>>> request)

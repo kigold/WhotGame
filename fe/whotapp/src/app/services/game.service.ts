@@ -24,6 +24,26 @@ export class GameService implements BaseService {
     return this.httpClient.get<ResponseModel<Game[]>>(this.SERVER_URL + '/api/game/getgames', requestOptions);
   }
 
+  getActiveGame(){
+    const requestOptions = {
+			headers: {
+			  'Content-Type': 'application/json',
+			},
+		};
+
+    return this.httpClient.get<ResponseModel<Game>>(this.SERVER_URL + '/api/game/getactivegame', requestOptions);
+  }
+
+  joinGame(){
+    const requestOptions = {
+			headers: {
+			  'Content-Type': 'application/json',
+			},
+		};
+
+    return this.httpClient.post<ResponseModel<Game>>(this.SERVER_URL + '/api/game/joingame', {}, requestOptions);
+  }
+
   handleError(error: HttpErrorResponse) {
     this.helperService.handleError(error);
   }

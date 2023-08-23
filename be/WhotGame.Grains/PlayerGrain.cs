@@ -124,5 +124,21 @@ namespace WhotGame.Grains
                 cardToMatch.Shape == card.Shape ||
                 string.Equals(cardToMatch.Name, card.Name) || (card.IsSpecial && string.Equals(card.Name, JOKER));
         }
+
+        public async Task AddPlayerToGame(long gameId)
+        {
+            var gameGrain = GrainFactory.GetGrain<GameGrain>(gameId);
+            _player.State.Games[gameId] = await gameGrain.GetGamesAsync();
+        }
+
+        public Task UpdateGameStatus(long gameId, GameStatus status)
+        {
+            _player.State.Games.TryGetValue(gameId, out var game);
+            if (game != null)
+            {
+                game.Status = status;
+            }
+            return Task.CompletedTask;
+        }
     }
 }

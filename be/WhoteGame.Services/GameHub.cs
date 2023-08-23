@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.IdentityModel.Tokens.Jwt;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
+using WhotGame.Core.DTO.Response;
 
 namespace WhoteGame.Services
 {
@@ -48,14 +49,24 @@ namespace WhoteGame.Services
             await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", "Game Loading . . .", (60 * 60));
         }
 
+        public async Task SeekGame()
+        {
+            await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", "Game Loading . . .", (60 * 60));
+        }
+
         public static async Task BroadcastGameLog(IHubContext<GameHub> context, long gameId, string message)
         {
             await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("GameLog", message);
         }
 
-        public static async Task BroadcastStartGame(IHubContext<GameHub> context, long gameId, PlayerLite player)
+        public static async Task BroadcastStartGame(IHubContext<GameHub> context, long gameId)
         {
-            await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("StartGame", player);
+            await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("StartGame");
+        }
+
+        public static async Task BroadcastAbortGame(IHubContext<GameHub> context, long gameId)
+        {
+            await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("AbortGame");
         }
 
         public static async Task BroadcastUpdateTurn(IHubContext<GameHub> context, long gameId, PlayerLite player)
@@ -63,7 +74,7 @@ namespace WhoteGame.Services
             await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("UpdateTurn", player);
         }
 
-        public static async Task BroadcastNewGame(IHubContext<GameHub> context, Game game)
+        public static async Task BroadcastNewGame(IHubContext<GameHub> context, GameResponse game)
         {
             await context.Clients.All.SendAsync("NewGame", game);
         }

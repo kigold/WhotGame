@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\Models\Requests\NewFolder\" />
     <Folder Include="Data\Models\Response\" />
   </ItemGroup>
 

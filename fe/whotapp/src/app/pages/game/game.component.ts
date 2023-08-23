@@ -21,14 +21,6 @@ export class GameComponent {
 
   ngOnInit(){
     this.gameId = this.activatedroute.snapshot.paramMap.get('id') ?? "";
-    // this.gameService.getGames()
-    // .subscribe({
-    //   next: (res) => {
-    //     this.games.set(res.payload)
-    //     console.log(res.payload)
-    //   },
-    //   error: (e) => this.gameService.handleError(e)
-    // })
 
     this.startGame();
   }

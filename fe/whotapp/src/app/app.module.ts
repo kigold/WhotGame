@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import {MatListModule} from '@angular/material/list';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
@@ -38,14 +39,15 @@ import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.com
     BrowserAnimationsModule,
     BrowserAnimationsModule,
     FormsModule,
-    MatToolbarModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatCardModule,
     MatDialogModule,
     MatInputModule,
     MatIconModule,
-    MatButtonToggleModule,
+    MatListModule,
     MatSnackBarModule,
+    MatToolbarModule,
   ],
   providers: [
     AuthService,

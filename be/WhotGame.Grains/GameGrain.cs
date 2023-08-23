@@ -6,6 +6,7 @@ using WhoteGame.Services;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
+using WhotGame.Core.Data.Models.Requests;
 using WhotGame.Core.Enums;
 using WhotGame.Core.Models.Requests;
 using static WhotGame.Grains.Constants;
@@ -16,19 +17,23 @@ namespace WhotGame.Grains
     {
         private readonly IHubContext<GameHub> _gameHub;
         private readonly IPersistentState<GameState> _game;
+        private readonly IGameService _gameService;
         private List<PlayerLite> _players = new List<PlayerLite>();
         private int _checkInvitationRetry = 3;
-        private IDisposable? _timer;
+        private IDisposable? _startGameTimer;
         private DateTime _lastActivityTime;
         private int _pick2Multiplier = 0;
         private int _pick4Multiplier = 0;
         private bool _skipOnePlayer = false;
+        private int MAX_PLAYERS = 10;
 
         public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
+            IGameService gameService,
             IHubContext<GameHub> gameHub) 
         { 
             _game = game;
             _gameHub = gameHub;
+            _gameService = gameService;
         }
 
         public override Task OnActivateAsync()
@@ -55,7 +60,7 @@ namespace WhotGame.Grains
                 CurrentPlayerId = currentPlayer.Id,
                 CurrentPlayerName = currentPlayer.FullName,
                 LastPlayerId = lastPlayer?.Id ?? 0,
-                LastPlayerName = lastPlayer?.FullName,
+                LastPlayerName = lastPlayer?.FullName ?? string.Empty,
                 LastActivityTime = _lastActivityTime,
                 LastPlayedCard = _game.State.PlayedCards.Last(),
                 MarketCount = _game.State.Cards.Count,
@@ -99,7 +104,7 @@ namespace WhotGame.Grains
             return await player.GetGameCardsAsync(_game.State.Id);            
         }
 
-        public async Task CreateGameAsync(long creatorId, CreateGameRequest request)
+        public async Task StartGameAsync(long creatorId, CreateGameRequest request)
         {
             await StartGameAsync(creatorId, request.PlayerIds, request.IsPrivate, request.CardCount = 10);
         }
@@ -107,7 +112,7 @@ namespace WhotGame.Grains
         private async Task CheckPlayersInvitations(object obj)
         {
             GameState state = (GameState)obj;
-            if (!state.ReadyPlayerIds.Any() && _checkInvitationRetry > 0)
+            if (!state.ReadyPlayerIds.Any() && _checkInvitationRetry > 0) //TODO Check how this works
             {
                 foreach (var playerId in state.PlayerIds)
                 {
@@ -134,7 +139,7 @@ namespace WhotGame.Grains
         {
             GameState state = (GameState)obj;
 
-            if (!state.ReadyPlayerIds.Any())
+            if (state.ReadyPlayerIds.Count < 2)
                 state.Status = GameStatus.Aborted;
             else
                 state.Status = GameStatus.Started;
@@ -148,6 +153,7 @@ namespace WhotGame.Grains
             _game.State.PlayerStartCardCount = cardCount;
             _game.State.CreatorId = creatorId;
             _game.State.PlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
+            _game.State.ReadyPlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
             _game.State.CurrentPlayerTurnIndex = 0;
 
 
@@ -162,13 +168,13 @@ namespace WhotGame.Grains
                 }
 
                 //wait for 60 secs Then Check players response to game invitations
-                _timer = RegisterTimer(CheckPlayersInvitations, _game.State, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+                _startGameTimer = RegisterTimer(CheckPlayersInvitations, _game.State, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
             }
             else
             {
                 //await Task.Delay(36000); //wait for 120 seconds for people to join
-                _timer = RegisterTimer(CheckReadyPlayersAndStartGame, _game.State, TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(10));
+                _startGameTimer = RegisterTimer(CheckReadyPlayersAndStartGame, _game.State, TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(10));
             }
 
             return readyPlayers.Any();
@@ -176,7 +182,7 @@ namespace WhotGame.Grains
 
         private async Task BeginGame()
         {
-            if (_game.State.ReadyPlayerIds.Any())
+            if (_game.State.Status == GameStatus.Started)
             {
                 _game.State.ReadyPlayerIds.Add(_game.State.CreatorId);
                 _game.State.Cards = GenerateGameCards();
@@ -186,23 +192,35 @@ namespace WhotGame.Grains
                 _game.State.GameLog.Add($"Put First Card from the Market:- {_game.State.PlayedCards.Last().Name}");
                 await PopulateReadyPlayersDetails();
                 _lastActivityTime = DateTime.UtcNow;
+                await GameHub.BroadcastStartGame(_gameHub, _game.State.Id);
+                await _gameService.UpdateGameStatus(_game.State.Id, new UpdateGameStatus { Status = _game.State.Status });
             }
             else
             {
-                _game.State.Status = GameStatus.Aborted;
+                //_game.State.Status = GameStatus.Aborted;
+                await GameHub.BroadcastAbortGame(_gameHub, _game.State.Id);
             }
-            _timer.Dispose();
+            await _gameService.UpdateGameStatus(_game.State.Id, new UpdateGameStatus { Status = _game.State.Status });
+            _startGameTimer?.Dispose();
         }
 
-        public Task AddPlayerAsync(long playerId)
+        public async Task<bool> AddPlayerAsync(long playerId)
         {
-            if (_game.State.Status == GameStatus.Created && !_game.State.ReadyPlayerIds.Contains(playerId))
+            if (_game.State.Status != GameStatus.Created || _game.State.ReadyPlayerIds.Count() >= MAX_PLAYERS)
             {
+                return false;
+            }
+            if (_game.State.Status == GameStatus.Created && !_game.State.ReadyPlayerIds.Contains(playerId) && _game.State.ReadyPlayerIds.Count() < MAX_PLAYERS)
+            {
+                //TODO do I really need two list of players? probably for Private game
                 _game.State.PlayerIds.Add(playerId);
                 _game.State.ReadyPlayerIds.Add(playerId);
+                var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
+                await player.AddPlayerToGame(playerId);
+                return true;
             }
 
-            return Task.CompletedTask;
+            return true;
         }
 
         public async Task<List<Card>> TryPickCardsAsync(long playerId)
@@ -327,6 +345,11 @@ namespace WhotGame.Grains
             _game.State.WinnerId = playerId;
             //Propergate message to FE that the game has ended
             //TODO do cleanup after game ends
+            _game.State.ReadyPlayerIds.ForEach(x =>
+            {
+                var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
+                player.UpdateGameStatus(_game.State.Id, _game.State.Status);
+            });
         }
 
         private async Task UpdatePlayerTurn()
@@ -424,6 +447,7 @@ namespace WhotGame.Grains
         private static (string, int)[] SpecialCards => new[] { (JOKER, 50), (PICK2, 50), (PICK4, 50), (GENERAL_MARKET, 50), (HOLD_ON, 50), (REVERSE, 50) };
     }
 }
-
+//TODO Broadcast LogMessage for each required action, 
 //TODO Either User ReadyPlayerIds or PlayerIds, not both
-//TODO I might have to move stuff that I need to be persisted to the grain state
+//TODO I might have to move stuff that I need to be persisted to the grain
+// TODO figure out how to close Ophaned games that are still in created status

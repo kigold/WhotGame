@@ -16,5 +16,7 @@ namespace WhotGame.Abstractions.GrainTypes
         Task<GameInvitation> GetGameInvitationAsync(long gameId);
         Task SendGameInvitationsAsync(long gameId, long playerId);
         Task RespondToGameInvitationsAsync(long gameId, bool response);
+        Task AddPlayerToGame(long gameId);
+        Task UpdateGameStatus(long gameId, GameStatus status);
     }
 }
