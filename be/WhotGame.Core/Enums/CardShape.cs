@@ -2,8 +2,8 @@
 {
     public enum CardShape
     {
-        Square = 0,
-        Circle,
+        Circle = 1,
+        Square,
         Triangle,
         Star,
         Cross

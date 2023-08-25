@@ -9,7 +9,7 @@ using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models.Requests;
 using WhotGame.Core.Enums;
 using WhotGame.Core.Models.Requests;
-using static WhotGame.Grains.Constants;
+using static WhotGame.Abstractions.Constants;
 
 namespace WhotGame.Grains
 {
@@ -18,6 +18,7 @@ namespace WhotGame.Grains
         private readonly IHubContext<GameHub> _gameHub;
         private readonly IPersistentState<GameState> _game;
         private readonly IGameService _gameService;
+        private readonly ICardService _cardService;
         private List<PlayerLite> _players = new List<PlayerLite>();
         private int _checkInvitationRetry = 3;
         private IDisposable? _startGameTimer;
@@ -29,11 +30,13 @@ namespace WhotGame.Grains
 
         public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
             IGameService gameService,
+            ICardService cardService,
             IHubContext<GameHub> gameHub) 
         { 
             _game = game;
             _gameHub = gameHub;
             _gameService = gameService;
+            _cardService = cardService;
         }
 
         public override Task OnActivateAsync()
@@ -185,7 +188,7 @@ namespace WhotGame.Grains
             if (_game.State.Status == GameStatus.Started)
             {
                 _game.State.ReadyPlayerIds.Add(_game.State.CreatorId);
-                _game.State.Cards = GenerateGameCards();
+                _game.State.Cards = await _cardService.GenerateCards();
                 ShareCards(_game.State.ReadyPlayerIds);
                 _game.State.Status = GameStatus.Started;
                 _game.State.PlayedCards.Add(_game.State.Cards.Pop()); //Play First Card From Market
@@ -401,53 +404,10 @@ namespace WhotGame.Grains
                 var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
                 player.SetGameCardsAsync(_game.State.Id, playerCards[playerId]);
             }
-        }
-
-        private static List<Card> GenerateGameCards()
-        {
-            var cards = new List<Card>();
-            int count = 1;
-
-            foreach(CardColor color in Enum.GetValues(typeof(CardColor)))
-            {
-                foreach (CardShape shape in Enum.GetValues(typeof(CardShape)))
-                {
-                    for (int i = 1; i <= 10; i++)
-                    {
-                        cards.Add(new Card
-                        {
-                            Id = count++,
-                            Color = color,
-                            Shape = shape,
-                            IsSpecial = false,
-                            Name = i.ToString(),
-                            Value = i
-                        });
-                    }  
-                    foreach(var special in SpecialCards)
-                    {
-                        cards.Add(new Card
-                        {
-                            Id = count++,
-                            Color = color,
-                            Shape = shape,
-                            IsSpecial = true,
-                            Name = special.Item1,
-                            Value = special.Item2
-                        });
-                    }
-                }
-            }
-
-            Random random = new Random();
-
-            return cards.OrderBy(x => random.Next()).ToList();
-        }
-
-        private static (string, int)[] SpecialCards => new[] { (JOKER, 50), (PICK2, 50), (PICK4, 50), (GENERAL_MARKET, 50), (HOLD_ON, 50), (REVERSE, 50) };
+        }        
     }
 }
 //TODO Broadcast LogMessage for each required action, 
 //TODO Either User ReadyPlayerIds or PlayerIds, not both
 //TODO I might have to move stuff that I need to be persisted to the grain
-// TODO figure out how to close Ophaned games that are still in created status
+// TODO figure out how to close Ophaned games that are still in created status, maybe background service that clean up games

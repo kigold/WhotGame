@@ -2,6 +2,7 @@
 using WhotGame.Core.Enums;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Models.Requests;
+using WhotGame.Core.Data.Models;
 
 namespace WhotGame.Abstractions.GrainTypes
 {

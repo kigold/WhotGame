@@ -1,6 +1,6 @@
 ﻿using WhotGame.Core.Enums;
 
-namespace WhotGame.Abstractions.Models
+namespace WhotGame.Core.Data.Models
 {
     public class Card
     {

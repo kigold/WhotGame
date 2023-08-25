@@ -7,7 +7,7 @@ using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Repositories;
 using WhotGame.Core.Enums;
-using static WhotGame.Grains.Constants;
+using static WhotGame.Abstractions.Constants;
 
 namespace WhotGame.Grains
 {

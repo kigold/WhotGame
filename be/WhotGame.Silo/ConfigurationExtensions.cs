@@ -20,6 +20,7 @@ namespace WhotGame.Silo
             services.AddTransient<IRepository<Game>, Repository<Game>>();
             services.AddTransient<IRepository<User>, Repository<User>>();
             services.AddScoped<IGameService, GameService>();
+            services.AddScoped<ICardService, CardService>();
             //services.AddScoped<IRealTimeClient, RealTimeClient>();
         }
 
