@@ -6,6 +6,7 @@ using WhoteGame.Services;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
+using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Models.Requests;
 using WhotGame.Core.Enums;
 using WhotGame.Core.Models.Requests;

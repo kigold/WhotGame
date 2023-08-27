@@ -5,6 +5,7 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { HubClientService } from 'src/app/services/hub-client.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
+import { Card } from 'src/app/models/card';
 
 @Component({
   selector: 'app-game',
@@ -14,10 +15,13 @@ import { Subject } from 'rxjs';
 export class GameComponent {
   gameId: string = '';
   games = signal(<Game[]>[]);
-  //games = signal(['']);
+  game = signal(<Game>{});
   message = signal('Teststr');
+  cards = signal(<Card[]>[]);
+  card = signal(<Card>{})
 
-  constructor(private activatedroute:ActivatedRoute, private gameService: GameService, private hubClient: HubClientService){}
+  constructor(private activatedroute:ActivatedRoute, private gameService: GameService,
+     private hubClient: HubClientService){}
 
   ngOnInit(){
     this.gameId = this.activatedroute.snapshot.paramMap.get('id') ?? "";
@@ -26,13 +30,21 @@ export class GameComponent {
   }
 
   startGame(){
-    this.hubClient.startGame(parseInt(this.gameId));
+    this.hubClient.connect();
+    //this.hubClient.startGame(parseInt(this.gameId));
     //let res = {} as Game
     //this.hubClient.receiveMessage(res);
     //this.message.set(res.name);
 
     this.message = this.hubClient.receivePlayerMessage();
-    //this.games = this.hubClient.receiveGameMessage();
+    this.gameService.getCards().subscribe({
+      next: (response) => {
+        console.log(response.payload);
+        this.cards.set(response.payload);
+        this.card.set(response.payload[0])
+      },
+      error: (error) => this.gameService.handleError(error)
+    });
 
   }
 }

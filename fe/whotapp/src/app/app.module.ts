@@ -22,6 +22,8 @@ import { AuthService } from './services/auth.service';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { HeaderInterceptor } from './interceptors/header.interceptor';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
+import { CardComponent } from './components/card/card.component';
+import { CardCarouselComponent } from './components/card-carousel/card-carousel.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +33,8 @@ import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.com
     LoginComponent,
     SignupComponent,
     PageNotFoundComponent,
+    CardComponent,
+    CardCarouselComponent,
   ],
   imports: [
     AppRoutingModule,
