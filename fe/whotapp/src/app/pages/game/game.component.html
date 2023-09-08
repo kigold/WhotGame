@@ -1,5 +1,4 @@
-<div>
-   <h2>connection Id {{message()}}</h2>
+<div class="container">
    <app-card [card]="card()"></app-card>
-   <app-card-carousel></app-card-carousel>
+   <app-card-carousel [cards]="cards()" (onSelectCard)="selectedCard($event)"></app-card-carousel>
 </div>

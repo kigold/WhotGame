@@ -1,1 +1,59 @@
-<p>card-carousel works!</p>
+<!-- <mat-grid-list id="gridy" cols="5" rowHeight="24rem" class="container">
+  <mat-grid-tile *ngFor="let card of cards">
+    <app-card [card]="card"></app-card>
+  </mat-grid-tile>
+</mat-grid-list> -->
+<div class="container">
+  <div class="filter-container">
+    <span matBadge="{{totalCards()}}" matBadgeColor="primary"></span>
+
+
+    <mat-form-field>
+      <mat-label>Shape Filter</mat-label>
+      <mat-select (selectionChange)="filter()" [(ngModel)]="shapeFilter">
+        <mat-option *ngFor="let shape of getShapeFilterOptions()" [value]="shape">
+          {{shape}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Color Filter</mat-label>
+      <mat-select (selectionChange)="filter()" [(ngModel)]="colorFilter">
+        <mat-option *ngFor="let color of getColorFilterOptions()" [value]="color">
+          {{color}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Special Card Filter</mat-label>
+      <mat-select (selectionChange)="filter()" [(ngModel)]="specialCardFilter">
+        <mat-option *ngFor="let item of getSpecialCardOptions()" [value]="item">
+          {{item}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <span matBadge="{{totalFilteredCards()}}" matBadgeColor="warn"></span>
+
+    <button mat-fab color="warn" (click)="clearFilter()">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+  <div class="slide-container">
+    <div class="slide-button">
+      <button [disabled]="prevButtonDisabled" (click)="onPrevButton()" mat-mini-fab color="accent" aria-label="Prev">
+        <mat-icon id="prev_button">skip_previous</mat-icon>
+      </button>
+    </div>
+
+    <app-card *ngFor="let card of cardsInSlide()" [card]="card" (selectCard)="selectCard(card)"></app-card>
+
+    <div class="slide-button">
+      <button [disabled]="nextButtonDisabled" (click)="onNextButton()" mat-mini-fab color="accent" aria-label="Next">
+        <mat-icon>skip_next</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

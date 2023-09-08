@@ -1,18 +1,11 @@
-#container{
-  height:100vh;
-  width:100vw;
-  background-color:#F2EBDD;
-  display:flex;
-  align-items:center;
-}
 .card{
   display: grid;
   grid-template-rows: 1fr 6fr 1fr;
   grid-gap: 20px;
   justify-content:center;
 
-  margin:0 30px;
-  height:25rem;
+  /* margin:0 30px; */
+  /* height:25rem; */
   width:18.75rem;
   background-color:#fff;
   border:5px solid black;

@@ -47,4 +47,8 @@ export class GameComponent {
     });
 
   }
+
+  selectedCard(card: Card){
+    this.card.set(card);
+  }
 }
