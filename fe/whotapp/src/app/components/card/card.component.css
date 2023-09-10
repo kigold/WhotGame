@@ -16,7 +16,7 @@
   display: grid;
   grid-template-columns: auto;
 
-  border:5px solid #000;
+  /* border:5px solid #000; */
   place-items: center;
   min-width: 12.5rem;
 }

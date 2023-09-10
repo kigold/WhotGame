@@ -1,12 +1,28 @@
-<!-- <mat-grid-list id="gridy" cols="5" rowHeight="24rem" class="container">
-  <mat-grid-tile *ngFor="let card of cards">
-    <app-card [card]="card"></app-card>
-  </mat-grid-tile>
-</mat-grid-list> -->
 <div class="container">
+  <div class="navigate-card-container">
+    <div class="navigate-card-button">
+      <button class="left" [disabled]="prevButtonDisabled" [disabled]="nextButtonDisabled" (click)="prevCard()" mat-mini-fab color="primary" aria-label="Next">
+        <mat-icon>keyboard_arrow_left</mat-icon>
+      </button>
+    </div>
+
+    <app-card [card]="card()"></app-card>
+
+    <div class="navigate-card-button">
+      <button class="right" [disabled]="nextButtonDisabled" [disabled]="nextButtonDisabled" (click)="nextCard()" mat-mini-fab color="primary" aria-label="Next">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    </div>
+
+    <div class="play">
+      <button mat-mini-fab [disabled]="nextButtonDisabled" (click)="playCard()" mat-mini-fab color="accent" aria-label="Next">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+    </div>
+
+  </div>
   <div class="filter-container">
     <span matBadge="{{totalCards()}}" matBadgeColor="primary"></span>
-
 
     <mat-form-field>
       <mat-label>Shape Filter</mat-label>
@@ -43,16 +59,16 @@
   </div>
   <div class="slide-container">
     <div class="slide-button">
-      <button [disabled]="prevButtonDisabled" (click)="onPrevButton()" mat-mini-fab color="accent" aria-label="Prev">
-        <mat-icon id="prev_button">skip_previous</mat-icon>
+      <button [disabled]="prevSlideButtonDisabled" (click)="prevSlide()" mat-mini-fab color="accent" aria-label="Prev">
+        <mat-icon id="prev_button">keyboard_arrow_left</mat-icon>
       </button>
     </div>
 
     <app-card *ngFor="let card of cardsInSlide()" [card]="card" (selectCard)="selectCard(card)"></app-card>
 
     <div class="slide-button">
-      <button [disabled]="nextButtonDisabled" (click)="onNextButton()" mat-mini-fab color="accent" aria-label="Next">
-        <mat-icon>skip_next</mat-icon>
+      <button [disabled]="nextSlideButtonDisabled" (click)="nextSlide()" mat-mini-fab color="accent" aria-label="Next">
+        <mat-icon>keyboard_arrow_right</mat-icon>
       </button>
     </div>
   </div>

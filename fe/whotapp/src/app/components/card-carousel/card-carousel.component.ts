@@ -17,9 +17,12 @@ export class CardCarouselComponent {
   shapeFilter: string | undefined = undefined;
   colorFilter: string | undefined = undefined;
   specialCardFilter: boolean | undefined = undefined;
-  //card = signal(<Card>{});
+  card = signal(<Card>{});
+  cardIndex = 0;
   prevButtonDisabled: boolean = false;
   nextButtonDisabled: boolean = false;
+  prevSlideButtonDisabled: boolean = false;
+  nextSlideButtonDisabled: boolean = false;
   lowerSliceIndex = 0;
   upperSliceIndex = this.cardsCount() > 6 ? this.cards!.length : 6
 
@@ -28,10 +31,10 @@ export class CardCarouselComponent {
   }
 
   ngOnChanges(){
-    console.log("CARDS", this.cards)
-    //this.card.set(this.cards[0]);
     this.filteredCards = this.cards;
     this.updateCardsSlide();
+    if (this.cards.length > 0)
+      this.card.set(this.cards[0]);
   }
 
   setPageIndex(){
@@ -39,7 +42,7 @@ export class CardCarouselComponent {
     this.upperSliceIndex = this.cardSlideCount
   }
 
-  onPrevButton(){
+  prevSlide(){
     console.log("PREV")
     this.upperSliceIndex -= (this.upperSliceIndex - this.lowerSliceIndex);
     this.lowerSliceIndex -= this.cardSlideCount;
@@ -53,7 +56,7 @@ export class CardCarouselComponent {
 
   }
 
-  onNextButton(){
+  nextSlide(){
     console.log("NEXT", this.getSpecialCardOptions())
     console.log("Nextting", this.lowerSliceIndex, this.upperSliceIndex)
     this.lowerSliceIndex += this.cardSlideCount;
@@ -64,26 +67,56 @@ export class CardCarouselComponent {
     if(this.upperSliceIndex > this.cardsCount())
       this.upperSliceIndex = this.cardsCount();
 
-      this.updateCardsSlide();
+    this.updateCardsSlide();
   }
 
   updateCardsSlide(){
     this.cardsInSlide.set(this.filteredCards.slice(this.lowerSliceIndex, this.upperSliceIndex));
-    this.nextButtonDisabled = !(this.cardsCount() > this.upperSliceIndex);
-    this.prevButtonDisabled = !(this.lowerSliceIndex > 0);
+    this.nextSlideButtonDisabled = !(this.cardsCount() > this.upperSliceIndex);
+    this.prevSlideButtonDisabled = !(this.lowerSliceIndex > 0);
     this.totalFilteredCards.set(this.filteredCards.length);
     this.totalCards.set(this.cards.length);
   }
 
-  cardsCount(){
-    if (this.filteredCards == undefined)
-      return 0;
-    return this.filteredCards.length
+  selectCard(card: Card){
+    this.card.set(card);
   }
 
-  selectCard(card: Card){
-    console.log("Selected Card", card)
-    this.onSelectCard.emit(card);
+  playCard(){
+    this.onSelectCard.emit(this.card());
+  }
+
+  syncCardIndexWithSelectedCard(){
+    //Sync Selected card - this.card - with cardIndex
+    //Source of truth is the selected card this.card
+    this.cardIndex = this.cards.findIndex(x => x.id == this.card().id)
+  }
+
+  nextCard(){
+    if (this.cards[this.cardIndex].id != this.card().id)
+      this.syncCardIndexWithSelectedCard()
+
+    if (this.cardsCount() > this.cardIndex)
+      this.cardIndex++
+
+    this.updateSelectedCard()
+  }
+
+  prevCard(){
+    if (this.cards[this.cardIndex].id != this.card().id)
+      this.syncCardIndexWithSelectedCard()
+
+    if (this.cardIndex > 0)
+      this.cardIndex--;
+
+    this.updateSelectedCard()
+  }
+
+  updateSelectedCard(){
+    this.card.set(this.cards[this.cardIndex])
+
+    this.nextButtonDisabled = !(this.cardsCount() > this.upperSliceIndex);
+    this.prevButtonDisabled = !(this.lowerSliceIndex > 0);
   }
 
   clearFilter(){
@@ -111,8 +144,12 @@ export class CardCarouselComponent {
     }
 
     this.updateCardsSlide();
+  }
 
-    console.log("TEST", this.lowerSliceIndex, this.upperSliceIndex);
+  cardsCount(){
+    if (this.filteredCards == undefined)
+      return 0;
+    return this.filteredCards.length
   }
 
   getShapeFilterOptions(){
@@ -152,4 +189,5 @@ export class CardCarouselComponent {
 //TODO Add Card View for Current Card on table, and card view for Selected Card
 //TODO Implement Play Card Button
 //TODO enable use or keyboard to play card, arrow keys to select and enter to play card
+//TODO nice to have some animation and transitions for card
 
