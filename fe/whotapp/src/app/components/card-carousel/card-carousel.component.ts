@@ -23,12 +23,20 @@ export class CardCarouselComponent {
   lowerSliceIndex = 0;
   upperSliceIndex = this.cardsCount() > 6 ? this.cards!.length : 6
 
+  ngOnInit(){
+    this.setPageIndex()
+  }
+
   ngOnChanges(){
-    //console.log("OnChanges", this.card())
     console.log("CARDS", this.cards)
     //this.card.set(this.cards[0]);
     this.filteredCards = this.cards;
     this.updateCardsSlide();
+  }
+
+  setPageIndex(){
+    this.lowerSliceIndex = 0;
+    this.upperSliceIndex = this.cardSlideCount
   }
 
   onPrevButton(){
@@ -87,6 +95,8 @@ export class CardCarouselComponent {
 
   filter(){
     this.filteredCards = this.cards;
+    //reset paging
+    this.setPageIndex()
 
     if (this.colorFilter != undefined){
       this.filteredCards = this.filteredCards.filter(x => x.color == this.colorFilter)
@@ -101,6 +111,8 @@ export class CardCarouselComponent {
     }
 
     this.updateCardsSlide();
+
+    console.log("TEST", this.lowerSliceIndex, this.upperSliceIndex);
   }
 
   getShapeFilterOptions(){
