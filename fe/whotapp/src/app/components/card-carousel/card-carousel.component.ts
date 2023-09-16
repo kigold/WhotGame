@@ -24,7 +24,7 @@ export class CardCarouselComponent {
   prevSlideButtonDisabled: boolean = false;
   nextSlideButtonDisabled: boolean = false;
   lowerSliceIndex = 0;
-  upperSliceIndex = this.cardsCount() > 6 ? this.cards!.length : 6
+  upperSliceIndex = this.cardsCount() > this.cardSlideCount ? this.cards!.length : this.cardSlideCount
 
   ngOnInit(){
     this.setPageIndex()
@@ -44,16 +44,15 @@ export class CardCarouselComponent {
       this.prevCard()
     if (event.key == 'Enter')
       this.playCard()
-    console.log("keypress", event)
   }
 
   setPageIndex(){
+    this.cardIndex = 0;
     this.lowerSliceIndex = 0;
-    this.upperSliceIndex = this.cardSlideCount
+    this.upperSliceIndex = this.cardSlideCount;
   }
 
   prevSlide(){
-    console.log("PREV")
     this.upperSliceIndex -= (this.upperSliceIndex - this.lowerSliceIndex);
     this.lowerSliceIndex -= this.cardSlideCount;
 
@@ -67,8 +66,6 @@ export class CardCarouselComponent {
   }
 
   nextSlide(){
-    console.log("NEXT", this.getSpecialCardOptions())
-    console.log("Nextting", this.lowerSliceIndex, this.upperSliceIndex)
     this.lowerSliceIndex += this.cardSlideCount;
     this.upperSliceIndex += this.cardSlideCount
 
@@ -82,14 +79,22 @@ export class CardCarouselComponent {
 
   updateCardsSlide(){
     this.cardsInSlide.set(this.filteredCards.slice(this.lowerSliceIndex, this.upperSliceIndex));
-    this.nextSlideButtonDisabled = !(this.cardsCount() > this.upperSliceIndex);
-    this.prevSlideButtonDisabled = !(this.lowerSliceIndex > 0);
+    this.setButtonsState()
     this.totalFilteredCards.set(this.filteredCards.length);
     this.totalCards.set(this.cards.length);
   }
 
+  setButtonsState(){
+    this.nextSlideButtonDisabled = !(this.cardsCount() > this.upperSliceIndex);
+    this.prevSlideButtonDisabled = !(this.lowerSliceIndex > 0);
+    this.nextButtonDisabled = !(this.cardsCount() > (this.cardIndex + 1));
+    this.prevButtonDisabled = (this.cardIndex <= 0);
+  }
+
   selectCard(card: Card){
     this.card.set(card);
+    this.syncCardIndexWithSelectedCard()
+    this.setButtonsState()
   }
 
   playCard(){
@@ -99,12 +104,15 @@ export class CardCarouselComponent {
   syncCardIndexWithSelectedCard(){
     //Sync Selected card - this.card - with cardIndex
     //Source of truth is the selected card this.card
-    this.cardIndex = this.cards.findIndex(x => x.id == this.card().id)
+    this.cardIndex = this.filteredCards.findIndex(x => x.id == this.card().id)
   }
 
   nextCard(){
-    if (this.cards[this.cardIndex].id != this.card().id)
-      this.syncCardIndexWithSelectedCard()
+    if (this.nextButtonDisabled)
+      return
+
+    if ((this.cardIndex + 2) > this.upperSliceIndex)//Update PageSlide with cursor. Ensure Cursor is on the pageSlide
+      this.nextSlide()
 
     if (this.cardsCount() > this.cardIndex)
       this.cardIndex++
@@ -113,8 +121,11 @@ export class CardCarouselComponent {
   }
 
   prevCard(){
-    if (this.cards[this.cardIndex].id != this.card().id)
-      this.syncCardIndexWithSelectedCard()
+    if (this.prevButtonDisabled)
+      return
+
+    if ((this.cardIndex - 1) < this.lowerSliceIndex)//Update PageSlide with cursor. Ensure Cursor is on the pageSlide
+      this.prevSlide()
 
     if (this.cardIndex > 0)
       this.cardIndex--;
@@ -123,10 +134,8 @@ export class CardCarouselComponent {
   }
 
   updateSelectedCard(){
-    this.card.set(this.cards[this.cardIndex])
-
-    this.nextButtonDisabled = !(this.cardsCount() > this.cardIndex);
-    this.prevButtonDisabled = !(this.cardIndex > 0);
+    this.card.set(this.filteredCards[this.cardIndex])
+    this.setButtonsState()
   }
 
   clearFilter(){
@@ -134,6 +143,10 @@ export class CardCarouselComponent {
     this.shapeFilter = undefined;
     this.specialCardFilter = undefined;
     this.filter();
+
+    //Reset Card Index
+    this.cardIndex = 0;
+    this.card.set(this.filteredCards[this.cardIndex]);
   }
 
   filter(){
@@ -156,16 +169,10 @@ export class CardCarouselComponent {
     this.updateCardsSlide();
   }
 
-  cardsCount(){
-    if (this.filteredCards == undefined)
-      return 0;
-    return this.filteredCards.length
-  }
-
   getShapeFilterOptions(){
     let set = new Set<string | undefined>();
     set.add(undefined)
-    const maxItemsCount = 5;
+    const maxItemsCount = 6;
 
     for(let i = 0; i < this.cards.length && set.size != maxItemsCount; i++){
       set.add(this.cards[i].shape);
@@ -176,7 +183,7 @@ export class CardCarouselComponent {
   getColorFilterOptions(){
     let set = new Set<string | undefined>();
     set.add(undefined)
-    const maxItemsCount = 6;
+    const maxItemsCount = 5;
 
     for(let i = 0; i < this.cards.length && set.size != maxItemsCount; i++){
       set.add(this.cards[i].color);
@@ -194,10 +201,17 @@ export class CardCarouselComponent {
     }
     return Array.from(set);
   }
+
+  cardsCount(){
+    if (this.filteredCards == undefined)
+      return 0;
+    return this.filteredCards.length
+  }
 }
 
 //TODO Add Card View for Current Card on table, and card view for Selected Card
 //TODO Implement Play Card Button
 //TODO enable use or keyboard to play card, arrow keys to select and enter to play card
 //TODO nice to have some animation and transitions for card
+//TODO Add Page or Card Slide, like page 1 - 10
 

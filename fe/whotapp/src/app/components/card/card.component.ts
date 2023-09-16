@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { Card } from 'src/app/models/card';
 
 @Component({
@@ -8,10 +8,10 @@ import { Card } from 'src/app/models/card';
 })
 export class CardComponent {
   @Input() card!: Card;
+  @Input() selected!: boolean;
   @Output() selectCard = new EventEmitter<Card>()
 
   onSelect(){
-    console.log("Inside Card Selecting")
     this.selectCard.emit(this.card);
   }
 }

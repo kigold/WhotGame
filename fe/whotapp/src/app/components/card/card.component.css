@@ -8,8 +8,12 @@
   /* height:25rem; */
   width:18.75rem;
   background-color:#fff;
-  border:5px solid black;
+  /* border:5px solid black; */
   box-shadow:0 0 0 7px #fff,0 0  8px 5px #000;
+}
+
+.card-selected{
+  border:5px solid black;
 }
 
 .card-shape{

@@ -1,7 +1,7 @@
 <div class="container" tabindex="0" (keypress)="keypress($event)">
   <div class="navigate-card-container">
     <div class="navigate-card-button">
-      <button class="left" [disabled]="prevButtonDisabled" [disabled]="nextButtonDisabled" (click)="prevCard()" mat-mini-fab color="primary" aria-label="Next">
+      <button class="left" [disabled]="prevButtonDisabled" (click)="prevCard()" mat-mini-fab color="primary" aria-label="Next">
         <mat-icon>keyboard_arrow_left</mat-icon>
       </button>
     </div>
@@ -9,13 +9,13 @@
     <app-card [card]="card()"></app-card>
 
     <div class="navigate-card-button">
-      <button class="right" [disabled]="nextButtonDisabled" [disabled]="nextButtonDisabled" (click)="nextCard()" mat-mini-fab color="primary" aria-label="Next">
+      <button class="right" [disabled]="nextButtonDisabled" (click)="nextCard()" mat-mini-fab color="primary" aria-label="Next">
         <mat-icon>keyboard_arrow_right</mat-icon>
       </button>
     </div>
 
     <div class="play">
-      <button mat-mini-fab [disabled]="nextButtonDisabled" (click)="playCard()" mat-mini-fab color="accent" aria-label="Next">
+      <button mat-mini-fab (click)="playCard()" mat-mini-fab color="accent" aria-label="Next">
         <mat-icon>play_arrow</mat-icon>
       </button>
     </div>
@@ -64,7 +64,7 @@
       </button>
     </div>
 
-    <app-card *ngFor="let card of cardsInSlide()" [card]="card" (selectCard)="selectCard(card)"></app-card>
+    <app-card *ngFor="let dcard of cardsInSlide()" [card]="dcard" [selected]="dcard.id==card().id" (selectCard)="selectCard(dcard)"></app-card>
 
     <div class="slide-button">
       <button [disabled]="nextSlideButtonDisabled" (click)="nextSlide()" mat-mini-fab color="accent" aria-label="Next">
