@@ -37,6 +37,16 @@ export class CardCarouselComponent {
       this.card.set(this.cards[0]);
   }
 
+  keypress(event: any){
+    if (event.key == 'n')
+      this.nextCard()
+    if (event.key == 'p')
+      this.prevCard()
+    if (event.key == 'Enter')
+      this.playCard()
+    console.log("keypress", event)
+  }
+
   setPageIndex(){
     this.lowerSliceIndex = 0;
     this.upperSliceIndex = this.cardSlideCount
@@ -115,8 +125,8 @@ export class CardCarouselComponent {
   updateSelectedCard(){
     this.card.set(this.cards[this.cardIndex])
 
-    this.nextButtonDisabled = !(this.cardsCount() > this.upperSliceIndex);
-    this.prevButtonDisabled = !(this.lowerSliceIndex > 0);
+    this.nextButtonDisabled = !(this.cardsCount() > this.cardIndex);
+    this.prevButtonDisabled = !(this.cardIndex > 0);
   }
 
   clearFilter(){
