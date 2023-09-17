@@ -79,6 +79,7 @@ export class CardCarouselComponent {
 
   updateCardsSlide(){
     this.cardsInSlide.set(this.filteredCards.slice(this.lowerSliceIndex, this.upperSliceIndex));
+
     this.setButtonsState()
     this.totalFilteredCards.set(this.filteredCards.length);
     this.totalCards.set(this.cards.length);
@@ -206,6 +207,16 @@ export class CardCarouselComponent {
     if (this.filteredCards == undefined)
       return 0;
     return this.filteredCards.length
+  }
+
+  getPageInfo(): string{
+    const page = this.getPage();
+    const totalPages = Math.ceil(this.totalFilteredCards()/this.cardSlideCount);
+    return "" + page + " - " + totalPages;
+  }
+
+  getPage(){
+    return (this.lowerSliceIndex/this.cardSlideCount) + 1;
   }
 }
 
