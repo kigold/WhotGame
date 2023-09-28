@@ -1,12 +1,12 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Card } from 'src/app/models/card';
 
 @Component({
-  selector: 'app-card',
-  templateUrl: './card.component.html',
-  styleUrls: ['./card.component.css']
+  selector: 'app-card-mini',
+  templateUrl: './card-mini.component.html',
+  styleUrls: ['./card-mini.component.css']
 })
-export class CardComponent {
+export class CardMiniComponent {
   @Input() card!: Card;
   @Input() selected!: boolean;
   @Input() size: string = "size-regular";

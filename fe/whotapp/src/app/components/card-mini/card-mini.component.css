@@ -87,6 +87,7 @@
   background-color: #ffffac;
 }
 
+
 /*Shapes*/
 .square{
   width: calc(var(--size) * 12rem);
@@ -119,81 +120,3 @@
   background-size: calc(var(--size) * 12rem) calc(var(--size) * 12rem);
   background-image: url('/assets/svg/Star.svg');
 }
-
-/*
-.triangle{
-	width: 0;
-	height: 0;
-	border-left: 6rem solid transparent;
-	border-right: 6rem solid transparent;
-	border-bottom: 12rem solid black;
-}
-.square{
-  width: 12rem;
-  height: 12rem;
-  background: black;
-}.circle{
-  width: 12rem;
-  height: 12rem;
-  background: black;
-  border-radius: 50%
-}
-.cross{
-  background: black;
-  height: 150px;
-  position: relative;
-  width: 50px;
-}
-
-.cross:after {
-  background: rgb(0, 0, 0);
-  content: "";
-  height: 40px;
-  left: -50px;
-  position: absolute;
-  top: 50px;
-  width: 150px;
-}
-
-
-.star{
-  position: relative;
-
-  display: inline-block;
-  width: 0;
-  height: 0;
-
-  margin-left: .9em;
-  margin-right: .9em;
-  margin-bottom: 1.2em;
-
-  border-right:  .3em solid transparent;
-  border-bottom: .7em  solid rgb(0, 0, 0);
-  border-left:   .3em solid transparent;
-
-  Controlls the size of the stars.
-  font-size: 6.25rem;
-}
-
-.star:before, .star:after {
-  content: '';
-
-  display: block;
-  width: 0;
-  height: 0;
-
-  position: absolute;
-  top: .6em;
-  left: -1em;
-
-  border-right:  1em solid transparent;
-  border-bottom: .7em  solid rgb(0, 0, 0);
-  border-left:   1em solid transparent;
-
-  transform: rotate(-35deg);
-}
-
-.star:after {
-  transform: rotate(35deg);
-}
-*/

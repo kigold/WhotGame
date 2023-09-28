@@ -10,7 +10,7 @@ mat-grid-list{
   justify-items: center;
   align-items: center;
 
-  transform: scale(0.6, 0.6);
+  /* transform: scale(0.6, 0.6); */
 }
 
 .navigate-card-container{

@@ -29,6 +29,7 @@ import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.com
 import { CardComponent } from './components/card/card.component';
 import { CardCarouselComponent } from './components/card-carousel/card-carousel.component';
 import {MatGridListModule} from '@angular/material/grid-list';
+import { CardMiniComponent } from './components/card-mini/card-mini.component';
 
 @NgModule({
   declarations: [
@@ -40,6 +41,7 @@ import {MatGridListModule} from '@angular/material/grid-list';
     PageNotFoundComponent,
     CardComponent,
     CardCarouselComponent,
+    CardMiniComponent,
   ],
   imports: [
     AppRoutingModule,
