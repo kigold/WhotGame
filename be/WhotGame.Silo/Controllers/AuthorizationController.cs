@@ -54,6 +54,7 @@ namespace WhotGame.Silo.Controllers
                 UserName = request.Email,
                 Firstname = request.Firstname,
                 Lastname = request.Lastname,
+                Avatar = request.Avatar,
             };
 
             var hash = _userManager.PasswordHasher.HashPassword(user, "P@ssw0rd");
@@ -63,7 +64,7 @@ namespace WhotGame.Silo.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors.First());
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: new UserResponse(user.Id, user.Email, user.Firstname, user.Lastname));
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: new UserResponse(user.Id, user.Email, user.Firstname, user.Avatar));
         }
 
         [HttpGet]
@@ -72,7 +73,7 @@ namespace WhotGame.Silo.Controllers
             //TODO Paginate
             var users = _userRepo.Get().ToList();
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: users.Select(x => new UserResponse(x.Id, x.Email, x.Firstname, x.Lastname)));
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: users.Select(x => new UserResponse(x.Id, x.Email, x.Firstname, x.Avatar)));
         }
 
         [HttpPost("~/connect/token"), Produces("application/json")]
