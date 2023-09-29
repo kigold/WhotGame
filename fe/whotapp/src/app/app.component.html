@@ -1,13 +1,19 @@
 <mat-toolbar class="toolbar" color="primary">
-  <h1>
-  Whot Game
-  </h1>
+  <span> Whot Game </span>
   <button mat-button routerLink="/">Home</button>
-  <!-- <a [routerLink]="['/Game', '1']">Game </a> -->
   <button mat-button [routerLink]="['/game', '1']">Game</button>
-  <button class="push" (click)="logout()" mat-icon-button aria-label="Logout">
+
+  <span class="spacer"></span>
+
+  <mat-card>
+    <img mat-card-image src="/assets/img/avatar/{{player.avatar}}">
+    <mat-card-subtitle>{{player.name}}</mat-card-subtitle>
+  </mat-card>
+
+  <button (click)="logout()" mat-icon-button aria-label="Logout">
     <mat-icon>exit_to_app</mat-icon>
   </button>
+
 </mat-toolbar>
 <div class="center">
   <router-outlet></router-outlet>

@@ -216,6 +216,7 @@ namespace WhotGame.Silo.Controllers
             identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
             identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
             identity.AddClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim("avatar", user.Avatar, OpenIddictConstants.Destinations.AccessToken);
         }
 
     }

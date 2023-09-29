@@ -6,13 +6,23 @@
     padding-top: 2rem
   }
 
-  div {
-    /* align-items: center; */
+  .spacer {
+    flex: 1 1 auto;
   }
 
-  .toolbar {
-    display: flex;
-  }
-  .push{
-    margin-left: auto;
-  }
+mat-card{
+  max-width: 45px;
+}
+mat-card img{
+  height: 45px;
+  width: 45px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+mat-card mat-card-subtitle{
+  width: 25px;
+  font-weight: 200;
+  line-height: 15px;
+  font-size: 10px;
+}
