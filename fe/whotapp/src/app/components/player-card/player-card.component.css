@@ -1,0 +1,11 @@
+img{
+  width: 80px;
+  height: 80px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.player-turn{
+  box-shadow: 10px 10px 5px;
+}

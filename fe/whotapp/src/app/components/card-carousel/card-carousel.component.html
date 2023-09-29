@@ -6,7 +6,7 @@
       </button>
     </div>
 
-    <app-card-mini [card]="card()" size="size-small"></app-card-mini>
+    <app-card [card]="card()" size="size-small"></app-card>
 
     <div class="navigate-card-button">
       <button class="right" [disabled]="nextButtonDisabled" (click)="nextCard()" mat-mini-fab color="primary" aria-label="Next">
@@ -64,7 +64,7 @@
       </button>
     </div>
 
-    <app-card-mini *ngFor="let dcard of cardsInSlide()" [card]="dcard" [selected]="dcard.id==card().id" (selectCard)="selectCard(dcard)"></app-card-mini>
+    <app-card *ngFor="let dcard of cardsInSlide()" [card]="dcard" size="size-small" [selected]="dcard.id==card().id" (selectCard)="selectCard(dcard)"></app-card>
 
     <div class="slide-button">
       <button [disabled]="nextSlideButtonDisabled" (click)="nextSlide()" mat-mini-fab color="accent" aria-label="Next">

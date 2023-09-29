@@ -9,8 +9,6 @@ mat-grid-list{
   /* grid-auto-rows: minmax(100px, auto); */
   justify-items: center;
   align-items: center;
-
-  /* transform: scale(0.6, 0.6); */
 }
 
 .navigate-card-container{
@@ -50,11 +48,7 @@ mat-grid-list{
 .slide-button{
   display: flex;
   justify-content: center;
-}
-
-.slide-button button{
-  position: absolute;
-  top: 75%;
+  align-items: center;
 }
 
 .page{

@@ -6,6 +6,8 @@ import { HubClientService } from 'src/app/services/hub-client.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { Card } from 'src/app/models/card';
+import { Player } from 'src/app/models/player';
+import { HelperService } from 'src/app/services/helper.service';
 
 @Component({
   selector: 'app-game',
@@ -19,6 +21,7 @@ export class GameComponent {
   message = signal('Teststr');
   cards = signal(<Card[]>[]);
   card = signal(<Card>{})
+  players = signal(<Player[]>[]);
 
   constructor(private activatedroute:ActivatedRoute, private gameService: GameService,
      private hubClient: HubClientService){}
@@ -27,6 +30,13 @@ export class GameComponent {
     this.gameId = this.activatedroute.snapshot.paramMap.get('id') ?? "";
 
     this.startGame();
+    //TODO Get Players from API
+    this.players.set([
+      {id: 1, name: "Kaycee", status: "active", avatar: "avatar-1.png"},
+      {id: 2, name: "Gift", status: "active", avatar: "avatar-2.png"},
+      {id: 3, name: "Jesse", status: "active", avatar: "avatar-3.png"},
+      {id: 4, name: "Cele", status: "active", avatar: "avatar-4.png"},
+    ])
   }
 
   startGame(){
@@ -52,3 +62,6 @@ export class GameComponent {
     this.card.set(card);
   }
 }
+
+//TODO Add Waiting SPinner stuff to the Game page, when waiting for players to join, if no player joins and we recevie the Abort Message from the Hub then remove spinner
+//and go back to home page and show error message that no one joined  the game

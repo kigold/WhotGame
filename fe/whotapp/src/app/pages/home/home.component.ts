@@ -27,6 +27,7 @@ export class HomeComponent {
 
   constructor(public dialog: MatDialog, private authService: AuthService,
     private gameService: GameService, private hubClient: HubClientService,
+    private helperService: HelperService,
     private router: Router) {
   }
 
@@ -36,14 +37,15 @@ export class HomeComponent {
       this.openLoginDialog();
     }
     else{
-      this.gameService.getGames()
-      .subscribe({
-        next: (res) => {
-          this.games.set(res.payload)
-          console.log(res.payload)
-        },
-        error: (e) => this.gameService.handleError(e)
-      })
+      //We do not need to manually select game, this is now selected automatically if available
+      // this.gameService.getGames()
+      // .subscribe({
+      //   next: (res) => {
+      //     this.games.set(res.payload)
+      //     console.log(res.payload)
+      //   },
+      //   error: (e) => this.gameService.handleError(e)
+      // })
 
       this.gameService.getActiveGame()
       .subscribe({
@@ -53,7 +55,10 @@ export class HomeComponent {
             this.router.navigate([`game/${response.payload.id}`])
           }
         },
-        error: (e) => console.log("No Active games found.")
+        error: (e) => {
+          console.log("No Active games found.");
+          this.helperService.toast("No Active games found., click on 'PLAY' button")
+        }
       });
 
       //Listen for New Games and Add to list

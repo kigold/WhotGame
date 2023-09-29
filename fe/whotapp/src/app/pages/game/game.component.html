@@ -1,4 +1,5 @@
 <div class="container">
+   <app-player-card-carousel [players]="players()"></app-player-card-carousel>
    <app-card [card]="card()"></app-card>
    <app-card-carousel [cards]="cards()" (onSelectCard)="selectedCard($event)"></app-card-carousel>
 </div>
