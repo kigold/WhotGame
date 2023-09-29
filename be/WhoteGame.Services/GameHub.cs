@@ -40,13 +40,13 @@ namespace WhoteGame.Services
             await base.OnConnectedAsync();
         }
 
-        public async Task StartGame(long gameId)
+        public async Task InitGame(long gameId)
         {
             var playerGameConnection = GeneratePlayerGameConnection(gameId, int.Parse(GetUserFromContext()));
             var gameConnection = GenerateGameConnection(gameId);
             await Groups.AddToGroupAsync(Context.ConnectionId, playerGameConnection);
             await Groups.AddToGroupAsync(Context.ConnectionId, gameConnection);
-            await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", "Game Loading . . .", (60 * 60));
+            await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", "Initing Loading . . .", (60 * 60));
         }
 
         public async Task SeekGame()

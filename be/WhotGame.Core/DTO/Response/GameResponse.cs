@@ -13,7 +13,7 @@ namespace WhotGame.Core.DTO.Response
 
         public static implicit operator GameResponse(Game model)
         {
-            return model == null ? new GameResponse() : new GameResponse
+            return model == null ? null : new GameResponse
             {
                 Name = model.Name,
                 CreatorId = model.CreatorId,
@@ -21,6 +21,19 @@ namespace WhotGame.Core.DTO.Response
                 Id = model.Id,
                 IsPrivate = model.IsPrivate,
                 Status = model.Status.ToString()
+            };
+        }
+
+        public static implicit operator GameResponse(PlayerActiveGame model)
+        {
+            return (model == null || model.Game == null) ? null : new GameResponse
+            {
+                Name = model.Game.Name,
+                CreatorId = model.Game.CreatorId,
+                DateCreated = model.Game.DateCreated,
+                Id = model.Game.Id,
+                IsPrivate = model.Game.IsPrivate,
+                Status = model.Game.Status.ToString()
             };
         }
     }

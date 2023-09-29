@@ -18,6 +18,7 @@ namespace WhotGame.Silo
         public static void AddServices(this IServiceCollection services)
         {
             services.AddTransient<IRepository<Game>, Repository<Game>>();
+            services.AddTransient<IRepository<PlayerActiveGame>, Repository<PlayerActiveGame>>();
             services.AddTransient<IRepository<User>, Repository<User>>();
             services.AddScoped<IGameService, GameService>();
             services.AddScoped<ICardService, CardService>();

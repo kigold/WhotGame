@@ -10,6 +10,7 @@ using WhotGame.Core.Data.Repositories;
 using WhotGame.Core.DTO.Response;
 using WhotGame.Core.Enums;
 using WhotGame.Core.Models.Requests;
+using WhotGame.Grains;
 using WhotGame.Silo.ViewModels;
 
 namespace WhotGame.Silo.Controllers
@@ -80,11 +81,23 @@ namespace WhotGame.Silo.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<GameResponse>), 200)]
-        public async Task<IActionResult> GetActiveGame()
+        public async Task<IActionResult> GetAvailableGame()
         {
-            var game = await _gameService.GetActiveGame();
+            var game = await _gameService.GetAvailableGame();
             if (game  == null)
                 return ApiResponse<string>(codes:ApiResponseCodes.NOT_FOUND, errors: "Not Found.");
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<GameResponse>), 200)]
+        public async Task<IActionResult> GetMyActiveGame()
+        {
+            var user = GetCurrentUser();
+            var game = await _gameService.GetMyActiveGame(user.UserId);
+            if (game == null)
+                return ApiResponse<string>(codes: ApiResponseCodes.NOT_FOUND, errors: "Not Found.");
 
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
         }
@@ -173,13 +186,11 @@ namespace WhotGame.Silo.Controllers
             {
                 game = await SetUpGame(user.UserId);
             }
-            else
-            {
-                var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
-                var isAddedToGame = await gameGrain.AddPlayerAsync(user.UserId);
-                if (!isAddedToGame)
-                    return ApiResponse<string>(codes: ApiResponseCodes.FAILED, errors: "Failed To join Game, try again");
-            }
+
+            var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
+            var isAddedToGame = await gameGrain.AddPlayerAsync(user.UserId);
+            if (!isAddedToGame)
+                return ApiResponse<string>(codes: ApiResponseCodes.FAILED, errors: "Failed To join Game, try again");
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
         }
 

@@ -156,10 +156,9 @@ namespace WhotGame.Grains
             //Init Game
             _game.State.PlayerStartCardCount = cardCount;
             _game.State.CreatorId = creatorId;
-            _game.State.PlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
-            _game.State.ReadyPlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
+            //_game.State.PlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
+            //_game.State.ReadyPlayerIds = new[] { creatorId }.Concat(playerIds).ToList();
             _game.State.CurrentPlayerTurnIndex = 0;
-
 
             var readyPlayers = new List<long>();
             if (isPrivate)
@@ -178,7 +177,7 @@ namespace WhotGame.Grains
             else
             {
                 //await Task.Delay(36000); //wait for 120 seconds for people to join
-                _startGameTimer = RegisterTimer(CheckReadyPlayersAndStartGame, _game.State, TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(10));
+                _startGameTimer = RegisterTimer(CheckReadyPlayersAndStartGame, _game.State, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
             }
 
             return readyPlayers.Any();
@@ -203,6 +202,7 @@ namespace WhotGame.Grains
             {
                 //_game.State.Status = GameStatus.Aborted;
                 await GameHub.BroadcastAbortGame(_gameHub, _game.State.Id);
+                _game.State.PlayerIds.ForEach(async x => await  _gameService.RemovePlayerFromGame(x, _game.State.Id));
             }
             await _gameService.UpdateGameStatus(_game.State.Id, new UpdateGameStatus { Status = _game.State.Status });
             _startGameTimer?.Dispose();
@@ -220,7 +220,7 @@ namespace WhotGame.Grains
                 _game.State.PlayerIds.Add(playerId);
                 _game.State.ReadyPlayerIds.Add(playerId);
                 var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
-                await player.AddPlayerToGame(playerId);
+                await player.AddPlayerToGame(_game.State.Id);
                 return true;
             }
 
@@ -352,7 +352,7 @@ namespace WhotGame.Grains
             _game.State.ReadyPlayerIds.ForEach(x =>
             {
                 var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
-                player.UpdateGameStatus(_game.State.Id, _game.State.Status);
+                player.EndGame(_game.State.Id);
             });
         }
 

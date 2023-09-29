@@ -59,6 +59,12 @@ namespace WhotGame.Core.Data.Repositories
             Delete(entityToDelete);
         }
 
+        public virtual void Delete(params object[] id)
+        {
+            TEntity entityToDelete = _dbSet.Find(id);
+            Delete(entityToDelete);
+        }
+
         public virtual void Delete(TEntity entityToDelete)
         {
             if (_context.Entry(entityToDelete).State == EntityState.Detached)
