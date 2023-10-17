@@ -15,7 +15,7 @@
     </div>
 
     <div class="play">
-      <button mat-mini-fab (click)="playCard()" mat-mini-fab color="accent" aria-label="Next">
+      <button mat-mini-fab [disabled]="playButtonDisabled" (click)="playCard()" mat-mini-fab color="accent" aria-label="Next">
         <mat-icon>play_arrow</mat-icon>
       </button>
     </div>

@@ -1,4 +1,5 @@
 ﻿using WhotGame.Core.Data.Models;
+using WhotGame.Core.DTO.Response;
 using WhotGame.Core.Enums;
 
 namespace WhotGame.Abstractions.Models
@@ -51,7 +52,7 @@ namespace WhotGame.Abstractions.Models
         public DateTime LastActivityTime { get; set; }
         public long LastPlayerId { get; set; }
         public string LastPlayerName { get; set; }
-        public Card LastPlayedCard { get; set; }
+        public CardResponse? LastPlayedCard { get; set; }
         public long CurrentPlayerId { get; set; }
         public string CurrentPlayerName { get; set; }
         public int MarketCount { get; set; }

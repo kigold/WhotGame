@@ -124,14 +124,14 @@ namespace WhotGame.Silo.Controllers
         }
 
         [HttpGet("{gameId}")]
-        [ProducesResponseType(typeof(ApiResponse<Card[]>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<CardResponse[]>), 200)]
         public async Task<IActionResult> GetGameCard(long gameId)
         {
             var user = GetCurrentUser();
             var playerGrain = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
-            var cards = await playerGrain.GetGameCardsAsync(gameId);
+            var cards = (await playerGrain.GetGameCardsAsync(gameId)).Select(x => (CardResponse)x);
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards, totalCount: cards.Length);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards, totalCount: cards.Count());
         }
 
         [HttpGet("{gameId}")]
@@ -221,20 +221,22 @@ namespace WhotGame.Silo.Controllers
         {
             var user = GetCurrentUser();
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(model.GameId);
-            var result = await gameGrain.TryPlayCard(user.UserId, model.CardId, model.CardColor, model.CardShape);
+            CardColor? cardColor = Enum.TryParse(model.CardColor, out CardColor color) ? color : null;
+            CardShape? cardShape = Enum.TryParse(model.CardShape, out CardShape shape) ? shape : null;           
+            var result = await gameGrain.TryPlayCard(user.UserId, model.CardId, cardColor, cardShape);
 
             return result ? ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "") : ApiResponse(ApiResponseCodes.ERROR, errors: "Failed to play card" );
         }
 
         [HttpPost("{gameId}")]
-        [ProducesResponseType(typeof(ApiResponse<List<Card>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<List<CardResponse>>), 200)]
         public async Task<IActionResult> PickCards(long gameId)
         {
             var user = GetCurrentUser();
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
             var result = await gameGrain.TryPickCardsAsync(user.UserId);
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: result);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: result.Select(x => (CardResponse)x));
         }
 
         //[HttpGet("{gameId}")]

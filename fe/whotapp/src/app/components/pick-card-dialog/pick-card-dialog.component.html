@@ -1,0 +1,9 @@
+<div class="container">
+  <h3>{{data.message}}</h3>
+  <div class="cards-container">
+    <app-card *ngFor="let card of data.cards" [card]="card" size="size-small"></app-card>
+  </div>
+  <button mat-fab color="warn" (click)="emitCloseDialog()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>

@@ -3,3 +3,11 @@
   grid-gap: 20px;
   justify-items: center;
 }
+
+.log-container{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)); /* Adjust the minmax width as needed */
+  grid-gap: 20px; /* Adjust the gap between items as needed */
+  width: 1000px;
+  align-items: center;
+}

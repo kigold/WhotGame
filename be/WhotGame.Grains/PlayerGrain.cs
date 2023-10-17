@@ -30,7 +30,8 @@ namespace WhotGame.Grains
             _player.State.Id = user.Id;
             _player.State.Email = user.Email;
             _player.State.FullName = user.FullName;
-            _player.State.Username = user.UserName;
+            _player.State.Name = user.Firstname;
+            _player.State.Avatar = user.Avatar;
             return base.OnActivateAsync();
         }
 

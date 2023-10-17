@@ -9,7 +9,7 @@ namespace WhotGame.Core.Data.Models.Requests
         public long GameId { get; set; }
         [Required]
         public int CardId { get; set; }
-        public CardColor? CardColor { get; set; }
-        public CardShape? CardShape { get; set; }
+        public string? CardColor { get; set; }
+        public string? CardShape { get; set; }
     }
 }

@@ -1,5 +1,15 @@
+<mat-progress-bar [ngStyle]="{'visibility': isLoading ? 'visible' : 'hidden'}" mode="query"></mat-progress-bar>
 <div class="container">
-   <app-player-card-carousel [players]="players()"></app-player-card-carousel>
-   <app-card [card]="card()"></app-card>
-   <app-card-carousel [cards]="cards()" (onSelectCard)="selectedCard($event)"></app-card-carousel>
+   <app-player-card-carousel [players]="players()" [playerTurn]="playerTurn()"></app-player-card-carousel>
+   <div class="log-container">
+    <app-game-logs [logs]="gameLogs()"></app-game-logs>
+    <app-card [card]="lastPlayedCard()"></app-card>
+    <div>
+      <button [disabled]="playerTurn().id != profile?.id" mat-fab color="warn" (click)="pickCard()">
+        <mat-icon>call_to_action</mat-icon>
+      </button>
+    </div>
+   </div>
+   <app-card-carousel [cards]="cards()" [playButtonDisabled]="disablePlayButton" (onPlayCard)="playCard($event)"></app-card-carousel>
 </div>
+

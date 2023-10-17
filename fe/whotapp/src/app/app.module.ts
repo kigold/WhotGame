@@ -11,6 +11,8 @@ import {MatDialogModule} from '@angular/material/dialog';
 import {FormsModule} from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
 import {MatIconModule} from '@angular/material/icon';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatSelectModule} from '@angular/material/select';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
@@ -28,9 +30,12 @@ import { HeaderInterceptor } from './interceptors/header.interceptor';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { CardComponent } from './components/card/card.component';
 import { CardCarouselComponent } from './components/card-carousel/card-carousel.component';
-import {MatGridListModule} from '@angular/material/grid-list';
+import { MatGridListModule } from '@angular/material/grid-list';
 import { PlayerCardComponent } from './components/player-card/player-card.component';
 import { PlayerCardCarouselComponent } from './components/player-card-carousel/player-card-carousel.component';
+import { GameLogsComponent } from './components/game-logs/game-logs.component';
+import { PickCardDialogComponent } from './components/pick-card-dialog/pick-card-dialog.component';
+import { JokerOptionsDialogComponent } from './components/joker-options-dialog/joker-options-dialog.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +48,10 @@ import { PlayerCardCarouselComponent } from './components/player-card-carousel/p
     CardComponent,
     CardCarouselComponent,
     PlayerCardComponent,
-    PlayerCardCarouselComponent
+    PlayerCardCarouselComponent,
+    GameLogsComponent,
+    PickCardDialogComponent,
+    JokerOptionsDialogComponent
   ],
   imports: [
     AppRoutingModule,
@@ -62,6 +70,8 @@ import { PlayerCardCarouselComponent } from './components/player-card-carousel/p
     MatInputModule,
     MatIconModule,
     MatListModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatSelectModule,
     MatSnackBarModule,
     MatToolbarModule,

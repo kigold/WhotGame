@@ -8,7 +8,8 @@ import { Card } from 'src/app/models/card';
 })
 export class CardCarouselComponent {
   @Input() cards!: Card[];
-  @Output() onSelectCard = new EventEmitter<Card>()
+  @Input() playButtonDisabled: boolean = false;
+  @Output() onPlayCard = new EventEmitter<Card>()
   cardSlideCount = 6;
   cardsInSlide = signal(<Card[]>[]);
   filteredCards:Card[] = [];
@@ -99,7 +100,8 @@ export class CardCarouselComponent {
   }
 
   playCard(){
-    this.onSelectCard.emit(this.card());
+    this.totalCards.set(this.cards.length);
+    this.onPlayCard.emit(this.card());
   }
 
   syncCardIndexWithSelectedCard(){

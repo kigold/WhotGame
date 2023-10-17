@@ -8,5 +8,5 @@ import { Player } from 'src/app/models/player';
 })
 export class PlayerCardComponent {
   @Input() player!: Player;
-  @Input() playerTurn!: boolean;
+  @Input() playerTurn: boolean = false;
 }

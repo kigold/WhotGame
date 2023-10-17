@@ -8,9 +8,11 @@ import { Player } from 'src/app/models/player';
 })
 export class PlayerCardCarouselComponent {
   @Input() players!: Player[];
-  playerTurn!: Player;
+  @Input() playerTurn!: Player;
 
   ngOnInit(){
-    this.playerTurn = this.players[0];
+  }
+
+  ngOnChanges(){
   }
 }

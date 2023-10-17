@@ -47,11 +47,11 @@ export class HomeComponent {
       //   error: (e) => this.gameService.handleError(e)
       // })
 
-      this.gameService.getActiveGame()
+      this.gameService.getMyActiveGame()
       .subscribe({
         next: (response) => {
           if (!response.hasError){
-            console.log("Active game found", response.payload)
+            console.log("Available game found", response.payload)
             this.router.navigate([`game/${response.payload.id}`])
           }
         },
@@ -62,14 +62,14 @@ export class HomeComponent {
       });
 
       //Listen for New Games and Add to list
-      this.hubClient.connect();
-      this.games = this.hubClient.onNewGame()
+      // this.hubClient.connect();
+      // this.games = this.hubClient.onNewGame()
     }
   }
 
   play(){
-    console.log("seeking Game");
-    this.hubClient.seekGame();
+    console.log("Initing Game");
+
     this.gameService.joinGame()
     .subscribe({
       next: (gameResponse) => {

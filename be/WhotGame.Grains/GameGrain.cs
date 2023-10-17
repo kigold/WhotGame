@@ -8,6 +8,7 @@ using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Models.Requests;
+using WhotGame.Core.DTO.Response;
 using WhotGame.Core.Enums;
 using WhotGame.Core.Models.Requests;
 using static WhotGame.Abstractions.Constants;
@@ -26,7 +27,7 @@ namespace WhotGame.Grains
         private DateTime _lastActivityTime;
         private int _pick2Multiplier = 0;
         private int _pick4Multiplier = 0;
-        private bool _skipOnePlayer = false;
+        private SkipPlayerType _skipPlayer = SkipPlayerType.None;
         private int MAX_PLAYERS = 10;
 
         public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
@@ -62,11 +63,11 @@ namespace WhotGame.Grains
             {
                 Id = _game.State.Id,
                 CurrentPlayerId = currentPlayer.Id,
-                CurrentPlayerName = currentPlayer.FullName,
+                CurrentPlayerName = currentPlayer.Name,
                 LastPlayerId = lastPlayer?.Id ?? 0,
-                LastPlayerName = lastPlayer?.FullName ?? string.Empty,
+                LastPlayerName = lastPlayer?.Name ?? string.Empty,
                 LastActivityTime = _lastActivityTime,
-                LastPlayedCard = _game.State.PlayedCards.Last(),
+                LastPlayedCard = _game.State.PlayedCards.LastOrDefault(),
                 MarketCount = _game.State.Cards.Count,
                 GameLog = _game.State.GameLog,
                 Status = _game.State.Status.ToString(),
@@ -110,7 +111,7 @@ namespace WhotGame.Grains
 
         public async Task StartGameAsync(long creatorId, CreateGameRequest request)
         {
-            await StartGameAsync(creatorId, request.PlayerIds, request.IsPrivate, request.CardCount = 10);
+            await StartGameAsync(creatorId, request.PlayerIds, request.IsPrivate, request.CardCount = 30);
         }
 
         private async Task CheckPlayersInvitations(object obj)
@@ -177,7 +178,7 @@ namespace WhotGame.Grains
             else
             {
                 //await Task.Delay(36000); //wait for 120 seconds for people to join
-                _startGameTimer = RegisterTimer(CheckReadyPlayersAndStartGame, _game.State, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
+                _startGameTimer = RegisterTimer(CheckReadyPlayersAndStartGame, _game.State, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(10));
             }
 
             return readyPlayers.Any();
@@ -187,7 +188,7 @@ namespace WhotGame.Grains
         {
             if (_game.State.Status == GameStatus.Started)
             {
-                _game.State.ReadyPlayerIds.Add(_game.State.CreatorId);
+                //_game.State.ReadyPlayerIds.Add(_game.State.CreatorId);
                 _game.State.Cards = await _cardService.GenerateCards();
                 ShareCards(_game.State.ReadyPlayerIds);
                 _game.State.Status = GameStatus.Started;
@@ -265,7 +266,7 @@ namespace WhotGame.Grains
                 cards.Add(_game.State.Cards.Pop());
             }
             await player.AddCardsAsync(_game.State.Id, cards);
-            _game.State.GameLog.Add($"Player:{playerId} - {(await player.GetPlayerAsync()).FullName} picked cards: {string.Join('|', cards.Select(x => $"{x.Id} - {x.Name}"))}");
+            _game.State.GameLog.Add($"Player:{playerId} - {(await player.GetPlayerAsync()).Name} picked cards: {string.Join("| ", cards.Select(x => $"{x.Id} - {x.Name} - {x.Shape}"))}");
             _lastActivityTime = DateTime.UtcNow;
             return cards;
         }
@@ -280,13 +281,17 @@ namespace WhotGame.Grains
             var card = await player.TryPlayCardAsync(_game.State.Id, cardId, cardColor, cardShape, _game.State.PlayedCards.Last(), _pick2Multiplier > 0, _pick4Multiplier > 0);
 
             if (string.Equals(card.Name, JOKER))
+            {
                 card.Color = cardColor;
+                card.Shape = cardShape;
+            }
+                
 
             await ProcessPlayedCard(card, playerId);
 
             _game.State.PlayedCards.Add(card);
 
-            _game.State.GameLog.Add($"Player:{playerId} - {(await player.GetPlayerAsync()).FullName} played card:{card.Id} - {card.Name}");
+            _game.State.GameLog.Add($"Player:{playerId} - {(await player.GetPlayerAsync()).Name} played card:{card.Id} - {card.Name} - {card.Shape}");
             _lastActivityTime = DateTime.UtcNow;
 
             var cards = await player.GetGameCardsAsync(_game.State.Id);
@@ -299,6 +304,7 @@ namespace WhotGame.Grains
             }
             _game.State.LastPlayerId= playerId;
             await UpdatePlayerTurn();
+            await GameHub.BroadcastCardPlayed(_gameHub, _game.State.Id, (CardResponse)card);
             return true;
         }
 
@@ -315,8 +321,10 @@ namespace WhotGame.Grains
                         {
                             if (playerId == currentPlayerId)
                                 continue;
-                            await PickCard(playerId, 1);
+                            var cards = await PickCard(playerId, 1);
+                            await GameHub.BroadcastReceivedCards(_gameHub, _game.State.Id, playerId, cards.Select(x => (CardResponse)x).ToArray());
                         }
+                        _skipPlayer = SkipPlayerType.SkipAllPlayers;
                         break;
                     }
                 case PICK2:
@@ -336,7 +344,7 @@ namespace WhotGame.Grains
                     }
                 case HOLD_ON:
                     {
-                        _skipOnePlayer = true;
+                        _skipPlayer = SkipPlayerType.SkipSinglePlayer;
                         break;
                     }
             }
@@ -358,8 +366,22 @@ namespace WhotGame.Grains
 
         private async Task UpdatePlayerTurn()
         {
-            int increamentValue = _skipOnePlayer ? 2 : 1;
-
+            int increamentValue = 1;
+            switch (_skipPlayer)
+            {
+                case SkipPlayerType.SkipSinglePlayer:
+                    {
+                        increamentValue++;
+                        break;
+                    }
+                case SkipPlayerType.SkipAllPlayers:
+                    {
+                        increamentValue = _game.State.ReadyPlayerIds.Count;
+                        break;
+                    }
+                default: break;
+            }
+            Console.WriteLine($"INCREMENT --------------------{increamentValue}");
             var turnIncreament = _game.State.PlayerTurnReversed ? -increamentValue : increamentValue;
 
             _game.State.CurrentPlayerTurnIndex = (_game.State.CurrentPlayerTurnIndex + turnIncreament);
@@ -370,6 +392,7 @@ namespace WhotGame.Grains
                 (_game.State.CurrentPlayerTurnIndex + _game.State.ReadyPlayerIds.Count) % _game.State.ReadyPlayerIds.Count;
             //TODO send player turn to all players
             await GameHub.BroadcastUpdateTurn(_gameHub, _game.State.Id, _players[_game.State.CurrentPlayerTurnIndex]);
+            _skipPlayer = SkipPlayerType.None; //Reset _skipOnrPlayer
         }
         private async Task PopulateReadyPlayersDetails()
         {

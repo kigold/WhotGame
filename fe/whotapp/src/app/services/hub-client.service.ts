@@ -9,6 +9,7 @@ import { Game } from '../models/games';
 import { Card } from '../models/card';
 import { AuthService } from './auth.service';
 import { STRING_TYPE } from '@angular/compiler';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -43,9 +44,18 @@ export class HubClientService implements BaseService {
     }
   }
 
-  startGame(gameId: number){
-    this.connect();
-    this.conn.invoke("StartGame", gameId);
+  initGame(gameId: number){
+    if (this.conn.state == HubConnectionState.Disconnected){
+        this.conn.start().then(() => {
+          console.log("SignalR Connected!");
+          this.conn.invoke("InitGame", gameId);
+        }).catch((err) => {
+          this.handleError(err)
+        })
+    }
+    else{
+      this.conn.invoke("InitGame", gameId);
+    }
   }
 
   gameCallbacks(){
@@ -54,22 +64,11 @@ export class HubClientService implements BaseService {
       //TODO set countdown clock
     })
 
-    this.conn.on("StartGame", (msg: string) => {
-      console.log("Received StartGame Broadcast", msg);
-      //TODO get Player Cards
-    })
-
-    this.conn.on("AbortGame", (msg: string) => {
-      console.log("Received AbortGame Broadcast", msg);
-    })
-
-    this.conn.on("CardPlayed", (card: Card) => {
-      this.onCardPlayed(card);
-    })
-
-    this.conn.on("UpdateTurn", (user: User) => {
-      this.onUpdateTurn(user)
-    })
+    // this.conn.on("StartGame", (msg: string) => {
+    //   console.log("Received StartGame Broadcast", msg);
+    //   this.onStartGame();
+    //   //TODO get Player Cards
+    // })
 
     this.conn.on("PickCard", (card: Card) => {
       this.onPickCard(card);
@@ -92,6 +91,64 @@ export class HubClientService implements BaseService {
     this.conn.invoke("StartGame", gameId);
   }
 
+  onAbortGame(): Observable<number>{
+    return new Observable<number>(subscriber => {
+      this.conn.on("AbortGame", (gameId: number) => {
+        console.log("Received AbortGame Broadcast", gameId);
+        subscriber.next(gameId);
+        subscriber.complete();
+      })
+    });
+  }
+
+  onStartGame(): Observable<number>{
+    return new Observable<number>(subscriber => {
+      this.conn.on("StartGame", (gameId) => {
+        console.log("Game Starting: ", gameId);
+        subscriber.next(gameId);
+        subscriber.complete();
+      })
+    });
+  }
+
+  onLoadGame(): Observable<string>{
+    return new Observable<string>(subscriber => {
+      this.conn.on("LoadGame", (msg: string, gameId: number) => {
+        console.log("Received Load Game Broadcast", gameId);
+        subscriber.next(msg);
+        subscriber.complete();
+      })
+    });
+  }
+
+  onCardPlayed(): Observable<Card>{
+    return new Observable<Card>(subscriber => {
+      this.conn.on("CardPlayed", (card: Card) => {
+        console.log("Received Card Played Message", card);
+        subscriber.next(card);
+      })
+    });
+  }
+
+  onUpdateTurn(): Observable<User>{
+    return new Observable<User>(subscriber => {
+      this.conn.on("UpdateTurn", (user: User) => {
+        console.log("Received UpdateTurn Message", user);
+        subscriber.next(user);
+      })
+    });
+  }
+
+  onReceivedCards(): Observable<Card[]>{
+    return new Observable<Card[]>(subscriber => {
+      this.conn.on("ReceivedCards", (cards: Card[]) => {
+        console.log("Received Cards", cards);
+        subscriber.next(cards);
+        //subscriber.complete();
+      })
+    });
+  }
+
   onNewGame(){
     this.conn.on("NewGame", (game: Game) => {
       console.log("New Game Available", game);
@@ -103,16 +160,6 @@ export class HubClientService implements BaseService {
   onGameLog(message: string){
     console.log("Received GameLog Message", message);
     //TODO Toast Message
-  }
-
-  onCardPlayed(card: Card){
-    console.log("Received Card Played Message", card);
-    //TODO Update the Card on the floor
-  }
-
-  onUpdateTurn(user: User){
-    console.log("Received UpdateTurn Message", user);
-      //TODO handle UpdateTurn, if user == this.User, then enable control else, disable control and Toast the user whos turn it is
   }
 
   onPickCard(card: Card){

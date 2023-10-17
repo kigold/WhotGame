@@ -1,5 +1,4 @@
-﻿using WhotGame.Abstractions.Models;
-using WhotGame.Core.Data.Models;
+﻿using WhotGame.Core.Data.Models;
 using WhotGame.Core.Enums;
 using static WhotGame.Abstractions.Constants;
 
@@ -39,7 +38,7 @@ namespace WhoteGame.Services
                     }
                     foreach (var special in SpecialCards)
                     {
-                        cards.Add(new Card
+                        var card = new Card
                         {
                             Id = count++,
                             Color = color,
@@ -47,7 +46,14 @@ namespace WhoteGame.Services
                             IsSpecial = true,
                             Name = special.Item1,
                             Value = special.Item2
-                        });
+                        };
+                        if (special.Item1 == JOKER)
+                        {
+                            card.Shape = null;
+                            card.Color = null;
+                        }
+
+                        cards.Add(card);
                     }
                 }
             }
