@@ -5,7 +5,7 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { HubClientService } from 'src/app/services/hub-client.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { Card, CardOptionRequest, GameStats } from 'src/app/models/card';
+import { Card, CardOptionRequest, GameStats, PlayerGameScore } from 'src/app/models/card';
 import { Player } from 'src/app/models/player';
 import { HelperService } from 'src/app/services/helper.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -29,6 +29,7 @@ export class GameComponent {
   playerTurn = signal(<Player>{});
   profile: User | undefined = undefined;
   gameStats = signal(<GameStats>{});
+  playersScores: PlayerGameScore[] = [];
   lastPlayedCard = signal(<Card>{});
   disablePlayButton: boolean = false;
   isLoading = false;
@@ -70,10 +71,12 @@ export class GameComponent {
     //this.hubClient.gameCallbacks();
     this.onAbortGame();
     this.onStartGame();
+    this.onEndGame();
     this.onLoadGame();
     this.onCardPlayed();
     this.onUpdateTurn();
     this.onReceivedCards();
+    this.onGameLogs();
     //let res = {} as Game
     //this.hubClient.receiveMessage(res);
     //this.message.set(res.name);
@@ -122,6 +125,18 @@ export class GameComponent {
     });
   }
 
+  onEndGame(){
+    const subscriber = this.hubClient.onEndGame();
+    subscriber.subscribe((gameId) => {
+      console.log("Ending Game: ", this.gameId, gameId)
+      this.isLoading = false;
+      //Set Leaderboard
+      this.setLeaderBoard();
+
+      this.hubClient.close();
+    });
+  }
+
   onCardPlayed(){
     const subscriber = this.hubClient.onCardPlayed();
     subscriber.subscribe((card) => {
@@ -142,6 +157,14 @@ export class GameComponent {
              console.log("handling Emiting", x);
              this.pickCardDialogRef.close();
             })
+    });
+  }
+
+  onGameLogs(){
+    const subscriber = this.hubClient.onGameLog();
+    subscriber.subscribe((log) => {
+      console.log("Received Game Log: ", log);
+      this.gameLogs.set(this.gameLogs().concat(log));
     });
   }
 
@@ -189,9 +212,25 @@ export class GameComponent {
             this.players.mutate(x => x.reverse());//TODO Test this
           this.lastPlayedCard.set(response.payload.lastPlayedCard);
         }
+        else if (this.gameStats() != undefined && this.gameStats().status == "Ended"){
+          this.setLeaderBoard();
+        }
       },
       error: (error) => this.gameService.handleError(error)
     })
+  }
+
+    setLeaderBoard(){
+      this.isLoading = true;
+      console.log("SETTING LeaderBoard for GAMEID: ", this.gameId)
+      this.gameService.getLeaderBoard(this.gameId).subscribe({
+        next: (response) => {
+          console.log(response.payload);
+          this.playersScores= response.payload;
+          this.isLoading = false;
+        },
+        error: (error) => this.gameService.handleError(error)
+      })
   }
 
   playCard(card: Card){
@@ -255,8 +294,9 @@ export class GameComponent {
   }
 }
 
-//TODO: Add Pick Market Button and Logic
-//TODO: Add Modal to show cards gotten from PickMarket
+//TODO: Better design LEaderboard screen when game ends
+//BUG: handle where first card on table is Joker, either select random color andn shape or dont use joker as starting card
+//TODO: What happens when a players last card is an instruction like pick 2 or general market
 //TODO: We can add a timer to correspond to the time when the game will begin)
 //TODO: When Playing Joker a modal should popup asking for color and shape
 //TODO: Joker should not have color or shape of its own, and check logic that Joker does not need any validation and will work on all cards

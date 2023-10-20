@@ -28,7 +28,7 @@ namespace WhotGame.Grains
         private int _pick2Multiplier = 0;
         private int _pick4Multiplier = 0;
         private SkipPlayerType _skipPlayer = SkipPlayerType.None;
-        private int MAX_PLAYERS = 10;
+        private const int MAX_PLAYERS = 10;
 
         public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
             IGameService gameService,
@@ -84,7 +84,6 @@ namespace WhotGame.Grains
 
             if (_game.State.Status == GameStatus.Ended)
             {
-                playersGameScore.Add(new PlayerGameScore { Winner = true,TotalValue = 0, Player = _players.First(x => x.Id == _game.State.WinnerId) });
                 foreach (var playerId in _game.State.ReadyPlayerIds)
                 {
                     if (playerId == _game.State.WinnerId)
@@ -95,9 +94,12 @@ namespace WhotGame.Grains
                     playersGameScore.Add(new PlayerGameScore
                     {
                         Player = _players.First(x => x.Id == playerId),
-                        TotalValue = cards.Sum(x => x.Value)
+                        TotalCardsValue = cards.Sum(x => x.Value)
                     });
                 }
+                playersGameScore = playersGameScore.OrderBy(x => x.TotalCardsValue).ToList();
+                playersGameScore.Insert(0, new PlayerGameScore { IsWinner = true, TotalCardsValue = 0, Player = _players.First(x => x.Id == _game.State.WinnerId) });
+                return playersGameScore.ToArray();
             }
 
             throw new ValidationException("Game has not ended or cannot be found");
@@ -111,7 +113,7 @@ namespace WhotGame.Grains
 
         public async Task StartGameAsync(long creatorId, CreateGameRequest request)
         {
-            await StartGameAsync(creatorId, request.PlayerIds, request.IsPrivate, request.CardCount = 30);
+            await StartGameAsync(creatorId, request.PlayerIds, request.IsPrivate, request.CardCount);
         }
 
         private async Task CheckPlayersInvitations(object obj)
@@ -152,7 +154,7 @@ namespace WhotGame.Grains
             await BeginGame();
         }
 
-        public async Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount = 10)
+        public async Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount)
         {
             //Init Game
             _game.State.PlayerStartCardCount = cardCount;
@@ -193,7 +195,7 @@ namespace WhotGame.Grains
                 ShareCards(_game.State.ReadyPlayerIds);
                 _game.State.Status = GameStatus.Started;
                 _game.State.PlayedCards.Add(_game.State.Cards.Pop()); //Play First Card From Market
-                _game.State.GameLog.Add($"Put First Card from the Market:- {_game.State.PlayedCards.Last().Name}");
+                await GameLog($"Put First Card from the Market:- {_game.State.PlayedCards.Last().Name}");
                 await PopulateReadyPlayersDetails();
                 _lastActivityTime = DateTime.UtcNow;
                 await GameHub.BroadcastStartGame(_gameHub, _game.State.Id);
@@ -266,8 +268,8 @@ namespace WhotGame.Grains
                 cards.Add(_game.State.Cards.Pop());
             }
             await player.AddCardsAsync(_game.State.Id, cards);
-            _game.State.GameLog.Add($"Player:{playerId} - {(await player.GetPlayerAsync()).Name} picked cards: {string.Join("| ", cards.Select(x => $"{x.Id} - {x.Name} - {x.Shape}"))}");
-            _lastActivityTime = DateTime.UtcNow;
+            await GameLog($"Player:{playerId} - {(await player.GetPlayerAsync()).Name} picked cards: {string.Join("| ", cards.Select(x => $"{x.Id} - {x.Name} - {x.Shape}"))}");
+           _lastActivityTime = DateTime.UtcNow;
             return cards;
         }
 
@@ -284,14 +286,13 @@ namespace WhotGame.Grains
             {
                 card.Color = cardColor;
                 card.Shape = cardShape;
-            }
-                
+            }                
 
             await ProcessPlayedCard(card, playerId);
 
             _game.State.PlayedCards.Add(card);
 
-            _game.State.GameLog.Add($"Player:{playerId} - {(await player.GetPlayerAsync()).Name} played card:{card.Id} - {card.Name} - {card.Shape}");
+            await GameLog($"Player:{playerId} - {(await player.GetPlayerAsync()).Name} played card:{card.Id} - {card.Name} - {card.Shape}", card.Color);
             _lastActivityTime = DateTime.UtcNow;
 
             var cards = await player.GetGameCardsAsync(_game.State.Id);
@@ -299,7 +300,7 @@ namespace WhotGame.Grains
             //Check if player has played all their cards
             if (!cards.Any())
             {
-                EndGame(playerId);
+                await EndGame(playerId);
                 return true;
             }
             _game.State.LastPlayerId= playerId;
@@ -350,18 +351,26 @@ namespace WhotGame.Grains
             }
         }
 
-        private void EndGame(long playerId)
+        private async Task GameLog(string message, CardColor? color = null)
+        {
+            _game.State.GameLog.Add(message);
+            var id = _game.State.GameLog.Count + 1;
+            await GameHub.BroadcastGameLog(_gameHub, _game.State.Id, new GameLog { Id = id, Message = message, Color = color.ToString() });
+        }
+
+        private async Task EndGame(long playerId)
         {
             _game.State.GameLog.Add($"Game Won by Player {playerId}");
             _game.State.Status = GameStatus.Ended;
             _game.State.WinnerId = playerId;
-            //Propergate message to FE that the game has ended
-            //TODO do cleanup after game ends
+            //cleanup after game ends
             _game.State.ReadyPlayerIds.ForEach(x =>
             {
                 var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
                 player.EndGame(_game.State.Id);
             });
+            //Propergate message to FE that the game has ended
+            await GameHub.BroadcastEndGame(_gameHub, _game.State.Id);
         }
 
         private async Task UpdatePlayerTurn()
@@ -381,7 +390,6 @@ namespace WhotGame.Grains
                     }
                 default: break;
             }
-            Console.WriteLine($"INCREMENT --------------------{increamentValue}");
             var turnIncreament = _game.State.PlayerTurnReversed ? -increamentValue : increamentValue;
 
             _game.State.CurrentPlayerTurnIndex = (_game.State.CurrentPlayerTurnIndex + turnIncreament);

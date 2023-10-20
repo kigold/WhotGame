@@ -5,7 +5,7 @@ import { BaseService } from './baseService';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HelperService } from './helper.service';
 import { User } from '../models/auth';
-import { Game } from '../models/games';
+import { Game, GameLog } from '../models/games';
 import { Card } from '../models/card';
 import { AuthService } from './auth.service';
 import { STRING_TYPE } from '@angular/compiler';
@@ -44,6 +44,12 @@ export class HubClientService implements BaseService {
     }
   }
 
+  close(){
+    if (this.conn.state != HubConnectionState.Disconnected){
+      this.conn.stop();
+    }
+  }
+
   initGame(gameId: number){
     if (this.conn.state == HubConnectionState.Disconnected){
         this.conn.start().then(() => {
@@ -73,14 +79,6 @@ export class HubClientService implements BaseService {
     this.conn.on("PickCard", (card: Card) => {
       this.onPickCard(card);
     })
-
-    this.conn.on("GameLog", (message: string) => {
-      this.onGameLog(message)
-    })
-
-    this.conn.on("EndGame", (user: User) => {
-      this.onEndGame(user)
-    })
   }
 
   seekGame(){
@@ -105,6 +103,16 @@ export class HubClientService implements BaseService {
     return new Observable<number>(subscriber => {
       this.conn.on("StartGame", (gameId) => {
         console.log("Game Starting: ", gameId);
+        subscriber.next(gameId);
+        subscriber.complete();
+      })
+    });
+  }
+
+  onEndGame(): Observable<number>{
+    return new Observable<number>(subscriber => {
+      this.conn.on("EndGame", (gameId) => {
+        console.log("Game Ending: ", gameId);
         subscriber.next(gameId);
         subscriber.complete();
       })
@@ -149,6 +157,16 @@ export class HubClientService implements BaseService {
     });
   }
 
+  onGameLog(): Observable<GameLog>{
+    return new Observable<GameLog>(subscriber => {
+      this.conn.on("GameLog", (message: GameLog) => {
+        console.log("Received Game Logs", message);
+        subscriber.next(message);
+        //subscriber.complete();
+      })
+    });
+  }
+
   onNewGame(){
     this.conn.on("NewGame", (game: Game) => {
       console.log("New Game Available", game);
@@ -157,20 +175,9 @@ export class HubClientService implements BaseService {
     return this.games
   }
 
-  onGameLog(message: string){
-    console.log("Received GameLog Message", message);
-    //TODO Toast Message
-  }
-
   onPickCard(card: Card){
     console.log("Received pick card message", card);
     //TODO receive card and add it to players card
-  }
-
-  onEndGame(user: User){
-    console.log("Received End Game message", user);
-      //TODO show the game winner, get leaderboard and close connections
-    return this.games
   }
 
   receivePlayerMessage(){

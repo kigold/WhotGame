@@ -36,6 +36,7 @@ import { PlayerCardCarouselComponent } from './components/player-card-carousel/p
 import { GameLogsComponent } from './components/game-logs/game-logs.component';
 import { PickCardDialogComponent } from './components/pick-card-dialog/pick-card-dialog.component';
 import { JokerOptionsDialogComponent } from './components/joker-options-dialog/joker-options-dialog.component';
+import { GameLeaderBoardComponent } from './components/game-leader-board/game-leader-board.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { JokerOptionsDialogComponent } from './components/joker-options-dialog/j
     PlayerCardCarouselComponent,
     GameLogsComponent,
     PickCardDialogComponent,
-    JokerOptionsDialogComponent
+    JokerOptionsDialogComponent,
+    GameLeaderBoardComponent
   ],
   imports: [
     AppRoutingModule,

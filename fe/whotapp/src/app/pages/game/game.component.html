@@ -1,6 +1,7 @@
 <mat-progress-bar [ngStyle]="{'visibility': isLoading ? 'visible' : 'hidden'}" mode="query"></mat-progress-bar>
 <div class="container">
-   <app-player-card-carousel [players]="players()" [playerTurn]="playerTurn()"></app-player-card-carousel>
+   <app-player-card-carousel [hidden]="playersScores.length > 0" [players]="players()" [playerTurn]="playerTurn()"></app-player-card-carousel>
+   <app-game-leader-board [playerScore]="playersScores"></app-game-leader-board>
    <div class="log-container">
     <app-game-logs [logs]="gameLogs()"></app-game-logs>
     <app-card [card]="lastPlayedCard()"></app-card>

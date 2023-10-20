@@ -22,7 +22,8 @@ namespace WhotGame.Silo.Controllers
         private readonly IGrainFactory _grainFactory;
         private readonly IRepository<Game> _gameRepo;
         private readonly IGameService _gameService;
-        private readonly IHubContext<GameHub> _gameHub;
+        private readonly IHubContext<GameHub> _gameHub; 
+        private const int GAME_CARDS_COUNT = 1;
 
         public GameController(IGrainFactory grainFactory,
             IHttpContextAccessor httpContext,
@@ -167,9 +168,8 @@ namespace WhotGame.Silo.Controllers
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
             await gameGrain.StartGameAsync(userId, new CreateGameRequest
             {
-                CardCount = 10,
-                PlayerIds = Array.Empty<long>(),
-                PlayersCount = 10,
+                CardCount = GAME_CARDS_COUNT,
+                PlayerIds = Array.Empty<long>()
             });
             await GameHub.BroadcastNewGame(_gameHub, (GameResponse)game);
             return game;

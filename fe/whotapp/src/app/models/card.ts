@@ -33,3 +33,9 @@ export interface GameStats {
   lastPlayedCard: Card,
   players: Player[]
 }
+
+export interface PlayerGameScore {
+  player: Player,
+  totalCardsValue: number,
+  isWinner: boolean
+}

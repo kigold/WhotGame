@@ -51,7 +51,7 @@ namespace WhoteGame.Services
             await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", "Game Loading . . .", (60 * 60));
         }
 
-        public static async Task BroadcastGameLog(IHubContext<GameHub> context, long gameId, string message)
+        public static async Task BroadcastGameLog(IHubContext<GameHub> context, long gameId, GameLog message)
         {
             await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("GameLog", message);
         }
@@ -59,6 +59,11 @@ namespace WhoteGame.Services
         public static async Task BroadcastStartGame(IHubContext<GameHub> context, long gameId)
         {
             await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("StartGame", gameId);
+        }
+
+        public static async Task BroadcastEndGame(IHubContext<GameHub> context, long gameId)
+        {
+            await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("EndGame", gameId);
         }
 
         public static async Task BroadcastAbortGame(IHubContext<GameHub> context, long gameId)
