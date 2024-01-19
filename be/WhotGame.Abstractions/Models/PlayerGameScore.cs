@@ -3,7 +3,7 @@
     public class PlayerGameScore
     {
         public PlayerLite Player { get; set; }
-        public int TotalValue { get; set; }
-        public bool Winner { get; set; }
+        public int TotalCardsValue { get; set; }
+        public bool IsWinner { get; set; }
     }
 }

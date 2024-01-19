@@ -1,13 +1,14 @@
 ﻿using Orleans;
 using Orleans.Runtime;
 using System.ComponentModel.DataAnnotations;
+using WhoteGame.Services;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Repositories;
 using WhotGame.Core.Enums;
-using static WhotGame.Grains.Constants;
+using static WhotGame.Abstractions.Constants;
 
 namespace WhotGame.Grains
 {
@@ -15,10 +16,12 @@ namespace WhotGame.Grains
     {
         private readonly IPersistentState<PlayerState> _player;
         private readonly IRepository<User> _userRepo;
-        public PlayerGrain([PersistentState("Player", "WhotGame")] IPersistentState<PlayerState> player, IRepository<User> userRepo)
+        private readonly IGameService _gameService;
+        public PlayerGrain([PersistentState("Player", "WhotGame")] IPersistentState<PlayerState> player, IRepository<User> userRepo, IGameService gameService)
         {
             _player = player;
             _userRepo = userRepo;
+            _gameService = gameService;
         }
 
         public override Task OnActivateAsync()
@@ -27,7 +30,8 @@ namespace WhotGame.Grains
             _player.State.Id = user.Id;
             _player.State.Email = user.Email;
             _player.State.FullName = user.FullName;
-            _player.State.Username = user.UserName;
+            _player.State.Name = user.Firstname;
+            _player.State.Avatar = user.Avatar;
             return base.OnActivateAsync();
         }
 
@@ -123,6 +127,27 @@ namespace WhotGame.Grains
             return cardToMatch.Color == card.Color ||
                 cardToMatch.Shape == card.Shape ||
                 string.Equals(cardToMatch.Name, card.Name) || (card.IsSpecial && string.Equals(card.Name, JOKER));
+        }
+
+        public async Task AddPlayerToGame(long gameId)
+        {
+            var gameGrain = GrainFactory.GetGrain<IGameGrain>(gameId);
+            _player.State.Games[gameId] = await gameGrain.GetGamesAsync();
+
+            //Add Player to Player Game Repo
+            //This should be revised if we can persist player game using orleans state
+            await _gameService.AddPlayerToGame(_player.State.Id, gameId);
+        }
+
+        public async Task EndGame(long gameId)
+        {
+            _player.State.Games.TryGetValue(gameId, out var game);
+            if (game != null)
+            {
+                game.Status = GameStatus.Ended;
+            }
+
+            await _gameService.RemovePlayerFromGame(_player.State.Id, gameId);
         }
     }
 }

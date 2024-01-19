@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WhoteGame.Services\WhoteGame.Services.csproj" />
     <ProjectReference Include="..\WhotGame.Abstractions\WhotGame.Abstractions.csproj" />
     <ProjectReference Include="..\WhotGame.Core\WhotGame.Core.csproj" />
   </ItemGroup>

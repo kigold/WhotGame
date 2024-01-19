@@ -4,4 +4,5 @@ export interface ResponseModel<T> {
     errors: string[],
     description: string,
     payload: T,
+    hasError: boolean
 }

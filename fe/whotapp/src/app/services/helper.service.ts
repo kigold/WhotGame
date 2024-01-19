@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import {MatSnackBarModule, MAT_SNACK_BAR_DATA, MatSnackBar} from '@angular/material/snack-bar';
+import {MatSnackBarModule, MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarConfig} from '@angular/material/snack-bar';
 import { throwError } from 'rxjs';
 
 @Injectable({
@@ -12,7 +12,7 @@ export class HelperService {
   constructor(private snackBar: MatSnackBar) { }
 
   toast(message: string){
-		this.snackBar.open(message);
+		this.snackBar.open(message, undefined, { duration: 5000 });
   }
 
   handleError(error: HttpErrorResponse){

@@ -9,6 +9,8 @@ using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Repositories;
+using WhotGame.Core.DTO.Requests;
+using WhotGame.Core.DTO.Response;
 using WhotGame.Silo.ViewModels;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -52,6 +54,7 @@ namespace WhotGame.Silo.Controllers
                 UserName = request.Email,
                 Firstname = request.Firstname,
                 Lastname = request.Lastname,
+                Avatar = request.Avatar,
             };
 
             var hash = _userManager.PasswordHasher.HashPassword(user, "P@ssw0rd");
@@ -61,7 +64,7 @@ namespace WhotGame.Silo.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors.First());
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: new UserResponse(user.Id, user.Email, user.Firstname, user.Lastname));
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: new UserResponse(user.Id, user.Email, user.Firstname, user.Avatar));
         }
 
         [HttpGet]
@@ -70,7 +73,7 @@ namespace WhotGame.Silo.Controllers
             //TODO Paginate
             var users = _userRepo.Get().ToList();
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: users.Select(x => new UserResponse(x.Id, x.Email, x.Firstname, x.Lastname)));
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: users.Select(x => new UserResponse(x.Id, x.Email, x.Firstname, x.Avatar)));
         }
 
         [HttpPost("~/connect/token"), Produces("application/json")]
@@ -142,10 +145,7 @@ namespace WhotGame.Silo.Controllers
                     OpenIddictConstants.Claims.Name,
                     OpenIddictConstants.Claims.Role);
 
-                identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
+                AddUserClaims(user, identity);
                 // Add more claims if necessary
 
                 foreach (var userRole in await _userManager.GetRolesAsync(user))
@@ -186,9 +186,7 @@ namespace WhotGame.Silo.Controllers
                     OpenIddictConstants.Claims.Name,
                     OpenIddictConstants.Claims.Role);
 
-                identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
-                identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
+                AddUserClaims(user, identity);
                 // Add more claims if necessary
 
                 foreach (var userRole in await _userManager.GetRolesAsync(user))
@@ -210,6 +208,15 @@ namespace WhotGame.Silo.Controllers
             }
             else
                 return Unauthorized();
+        }
+
+        private static void AddUserClaims(User user, ClaimsIdentity identity)
+        {
+            identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(), OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim(OpenIddictConstants.Claims.Username, user.UserName, OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim(OpenIddictConstants.Claims.Name, user.FullName, OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
+            identity.AddClaim("avatar", user.Avatar, OpenIddictConstants.Destinations.AccessToken);
         }
 
     }

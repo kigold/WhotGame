@@ -1,0 +1,78 @@
+<div class="container" tabindex="0" (keypress)="keypress($event)">
+  <div class="navigate-card-container">
+    <div class="navigate-card-button">
+      <button class="left" [disabled]="prevButtonDisabled" (click)="prevCard()" mat-mini-fab color="primary" aria-label="Next">
+        <mat-icon>keyboard_arrow_left</mat-icon>
+      </button>
+    </div>
+
+    <app-card [card]="card()" size="size-small"></app-card>
+
+    <div class="navigate-card-button">
+      <button class="right" [disabled]="nextButtonDisabled" (click)="nextCard()" mat-mini-fab color="primary" aria-label="Next">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    </div>
+
+    <div class="play">
+      <button mat-mini-fab [disabled]="playButtonDisabled" (click)="playCard()" mat-mini-fab color="accent" aria-label="Next">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+    </div>
+
+  </div>
+  <div class="filter-container">
+    <span matBadge="{{totalCards()}}" matBadgeColor="primary"></span>
+
+    <mat-form-field>
+      <mat-label>Shape Filter</mat-label>
+      <mat-select (selectionChange)="filter()" [(ngModel)]="shapeFilter">
+        <mat-option *ngFor="let shape of getShapeFilterOptions()" [value]="shape">
+          {{shape}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Color Filter</mat-label>
+      <mat-select (selectionChange)="filter()" [(ngModel)]="colorFilter">
+        <mat-option *ngFor="let color of getColorFilterOptions()" [value]="color">
+          {{color}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Special Card Filter</mat-label>
+      <mat-select (selectionChange)="filter()" [(ngModel)]="specialCardFilter">
+        <mat-option *ngFor="let item of getSpecialCardOptions()" [value]="item">
+          {{item}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <span matBadge="{{totalFilteredCards()}}" matBadgeColor="warn"></span>
+
+    <button mat-fab color="warn" (click)="clearFilter()">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+  <div class="slide-container">
+    <div class="slide-button">
+      <button [disabled]="prevSlideButtonDisabled" (click)="prevSlide()" mat-mini-fab color="accent" aria-label="Prev">
+        <mat-icon id="prev_button">keyboard_arrow_left</mat-icon>
+      </button>
+    </div>
+
+    <app-card *ngFor="let dcard of cardsInSlide()" [card]="dcard" size="size-small" [selected]="dcard.id==card().id" (selectCard)="selectCard(dcard)"></app-card>
+
+    <div class="slide-button">
+      <button [disabled]="nextSlideButtonDisabled" (click)="nextSlide()" mat-mini-fab color="accent" aria-label="Next">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div class="page">
+    <h2>{{getPageInfo()}}</h2>
+  </div>
+</div>

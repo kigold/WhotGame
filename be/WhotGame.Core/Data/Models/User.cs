@@ -7,6 +7,7 @@ namespace WhotGame.Core.Data.Models
     {
         public string Firstname { get; set; }
         public string Lastname { get; set; }
+        public string Avatar { get; set; }
         [NotMapped]
         public string FullName => $"{Firstname} {Lastname}";
     }

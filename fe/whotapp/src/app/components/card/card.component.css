@@ -1,0 +1,200 @@
+.size-regular{
+  --size: 1;
+}
+.size-small{
+  --size: 0.5;
+}
+.size-xs{
+  --size: 0.25;
+}
+
+.card{
+  display: grid;
+  grid-template-rows: 1fr 6fr 1fr;
+  grid-gap: 20px;
+  justify-content:center;
+
+  /* margin:0 30px; */
+  /* height:25rem; */
+  width: calc(var(--size) * 18.75rem);
+  background-color:#fff;
+  /* border:5px solid black; */
+  box-shadow:0 0 0 7px #fff,0 0  8px 5px #000;
+
+}
+
+.card-selected{
+  border:5px solid black;
+}
+
+.card-shape{
+  display: grid;
+  grid-template-columns: auto;
+
+  /* border:5px solid #000; */
+  place-items: center;
+  min-width: calc(var(--size) * 12.5rem);
+}
+
+.card-name{
+  padding-top: calc(var(--size) * 1rem);
+  font-size: calc(var(--size) * 2rem);
+  line-height: calc(var(--size) * 30px);
+  font-weight: calc(var(--size) * 400);
+  text-align: center;
+}
+
+.shape-name{
+  display: grid;
+  font-weight: calc(var(--size) * 300);
+  text-align: center;
+}
+
+.card-value{
+  display: grid;
+
+  font-size: calc(var(--size) * 1.2rem);
+  line-height: calc(var(--size) * 30px);
+  font-weight:calc(var(--size) * 300);
+  text-align:center;
+}
+
+/*Colors*/
+.red-shape{
+  background-color: #da5959;
+}
+.red-bg{
+  background-color: #ffcbcb;
+}
+
+.blue-shape{
+  background-color: #0d76d9;
+}
+.blue-bg{
+  background-color: #82b2e9;
+}
+
+.green-shape{
+  background-color: #12e60b;
+}
+.green-bg{
+  background-color: #a2f48d;
+}
+
+.yellow-shape{
+  background-color: #ffff00;
+}
+.yellow-bg{
+  background-color: #ffffac;
+}
+
+/*Shapes*/
+.square{
+  width: calc(var(--size) * 12rem);
+  height: calc(var(--size) * 12rem);
+  background-size: calc(var(--size) * 12rem) calc(var(--size) * 12rem);
+  background-image: url('/assets/svg/Square.svg');
+  color: #12e60b;
+}
+.triangle{
+  width: calc(var(--size) * 12rem);
+  height: calc(var(--size) * 12rem);
+  background-size: calc(var(--size) * 12rem) calc(var(--size) * 12rem);
+  background-image: url('/assets/svg/Triangle.svg');
+}
+.circle{
+  width: calc(var(--size) * 12rem);
+  height: calc(var(--size) * 12rem);
+  background-size: calc(var(--size) * 12rem) calc(var(--size) * 12rem);
+  background-image: url('/assets/svg/Circle.svg');
+}
+.cross{
+  width: calc(var(--size) * 12rem);
+  height: calc(var(--size) * 12rem);
+  background-size: calc(var(--size) * 12rem) calc(var(--size) * 12rem);
+  background-image: url('/assets/svg/Cross.svg');
+}
+.star{
+  width: calc(var(--size) * 12rem);
+  height: calc(var(--size) * 12rem);
+  background-size: calc(var(--size) * 12rem) calc(var(--size) * 12rem);
+  background-image: url('/assets/svg/Star.svg');
+}
+
+/*
+.triangle{
+	width: 0;
+	height: 0;
+	border-left: 6rem solid transparent;
+	border-right: 6rem solid transparent;
+	border-bottom: 12rem solid black;
+}
+.square{
+  width: 12rem;
+  height: 12rem;
+  background: black;
+}.circle{
+  width: 12rem;
+  height: 12rem;
+  background: black;
+  border-radius: 50%
+}
+.cross{
+  background: black;
+  height: 150px;
+  position: relative;
+  width: 50px;
+}
+
+.cross:after {
+  background: rgb(0, 0, 0);
+  content: "";
+  height: 40px;
+  left: -50px;
+  position: absolute;
+  top: 50px;
+  width: 150px;
+}
+
+
+.star{
+  position: relative;
+
+  display: inline-block;
+  width: 0;
+  height: 0;
+
+  margin-left: .9em;
+  margin-right: .9em;
+  margin-bottom: 1.2em;
+
+  border-right:  .3em solid transparent;
+  border-bottom: .7em  solid rgb(0, 0, 0);
+  border-left:   .3em solid transparent;
+
+  Controlls the size of the stars.
+  font-size: 6.25rem;
+}
+
+.star:before, .star:after {
+  content: '';
+
+  display: block;
+  width: 0;
+  height: 0;
+
+  position: absolute;
+  top: .6em;
+  left: -1em;
+
+  border-right:  1em solid transparent;
+  border-bottom: .7em  solid rgb(0, 0, 0);
+  border-left:   1em solid transparent;
+
+  transform: rotate(-35deg);
+}
+
+.star:after {
+  transform: rotate(35deg);
+}
+*/

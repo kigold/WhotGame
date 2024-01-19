@@ -1,5 +1,21 @@
-<h2>Home Page</h2>
+<div class="container">
+  <h2>Home Page</h2>
 <div class="profile" *ngIf="profile">
     Name: {{profile().name}}
     Email: {{profile().username}}
+</div>
+<div class="example-button-container">
+  <button (click)="play()" mat-fab color="accent" aria-label="Example icon button with a delete icon">
+    <mat-icon>play_circle</mat-icon>
+  </button>
+</div>
+<div class="list-container">
+<mat-list>
+  <mat-list-item *ngFor="let game of games()">
+    <h3 matListItemTitle>{{game.id}}: {{game.name}}</h3>
+    <p matListItemLine>{{game.dateCreated | date:'long'}}</p>
+    <h5 matListItemLine class="demo-2">{{game.status}}</h5>
+  </mat-list-item>
+</mat-list>
+</div>
 </div>

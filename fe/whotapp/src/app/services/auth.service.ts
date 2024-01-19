@@ -57,7 +57,8 @@ export class AuthService implements BaseService {
 		return {
 			id: parseInt(u.sub as string),
 			name: u.name,
-			username: u.username
+			username: u.username,
+      avatar: u.avatar
 		}
 	}
 

@@ -1,0 +1,24 @@
+<div>
+  <p>Select Joker Color and Shape</p>
+  <mat-form-field>
+    <mat-label>Select Shape</mat-label>
+    <mat-select [required]="true" [(ngModel)]="shapeSelection">
+      <mat-option *ngFor="let item of ShapeOptions" [value]="item">
+        {{item}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Select Color</mat-label>
+    <mat-select [required]="true" [(ngModel)]="colorSelection">
+      <mat-option *ngFor="let item of ColorOptions" [value]="item">
+        {{item}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button [disabled]="!colorSelection||!shapeSelection" mat-fab color="warn" (click)="emitPlayCard()">
+    <mat-icon>play_arrow</mat-icon>
+  </button>
+</div>

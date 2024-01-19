@@ -13,7 +13,8 @@ export interface SignupRequest{
 export interface User{
     id: number,
     name: string,
-    username: string
+    username: string,
+    avatar: string
 }
 
 export interface LoginResponseModel {

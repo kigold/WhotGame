@@ -1,11 +1,16 @@
-<p>game works!</p>
-<div>
-    <ul>
-        <li *ngFor="let game of games()">
-            {{game.id}}
-            {{game.name}}
-            {{game.dateCreated}}
-            {{game.status}}
-        </li>
-    </ul>
+<mat-progress-bar [ngStyle]="{'visibility': isLoading ? 'visible' : 'hidden'}" mode="query"></mat-progress-bar>
+<div class="container">
+   <app-player-card-carousel [hidden]="playersScores.length > 0" [players]="players()" [playerTurn]="playerTurn()"></app-player-card-carousel>
+   <app-game-leader-board [playerScore]="playersScores"></app-game-leader-board>
+   <div class="log-container">
+    <app-game-logs [logs]="gameLogs()"></app-game-logs>
+    <app-card [card]="lastPlayedCard()"></app-card>
+    <div>
+      <button [disabled]="playerTurn().id != profile?.id" mat-fab color="warn" (click)="pickCard()">
+        <mat-icon>call_to_action</mat-icon>
+      </button>
+    </div>
+   </div>
+   <app-card-carousel [cards]="cards()" [playButtonDisabled]="disablePlayButton" (onPlayCard)="playCard($event)"></app-card-carousel>
 </div>
+

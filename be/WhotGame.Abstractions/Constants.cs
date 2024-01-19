@@ -1,4 +1,4 @@
-﻿namespace WhotGame.Grains
+﻿namespace WhotGame.Abstractions
 {
     public static class Constants
     {

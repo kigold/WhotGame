@@ -1,5 +1,6 @@
 ﻿using Orleans;
 using WhotGame.Abstractions.Models;
+using WhotGame.Core.Data.Models;
 using WhotGame.Core.Enums;
 
 namespace WhotGame.Abstractions.GrainTypes
@@ -16,5 +17,7 @@ namespace WhotGame.Abstractions.GrainTypes
         Task<GameInvitation> GetGameInvitationAsync(long gameId);
         Task SendGameInvitationsAsync(long gameId, long playerId);
         Task RespondToGameInvitationsAsync(long gameId, bool response);
+        Task AddPlayerToGame(long gameId);
+        Task EndGame(long gameId);
     }
 }

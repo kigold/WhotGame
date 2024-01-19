@@ -1,0 +1,16 @@
+.container {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  padding: auto;
+}
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Adjust the minmax width as needed */
+  grid-gap: 40px; /* Adjust the gap between items as needed */
+  width: 500px;
+  /* grid-template-columns:  1fr 1fr 1fr; */
+  justify-items: center;
+  align-items: center;
+  padding: auto;
+}

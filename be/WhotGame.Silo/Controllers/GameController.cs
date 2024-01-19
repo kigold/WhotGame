@@ -1,11 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Orleans;
+using WhoteGame.Services;
 using WhotGame.Abstractions.GrainTypes;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Data.Models;
 using WhotGame.Core.Data.Models.Requests;
 using WhotGame.Core.Data.Repositories;
+using WhotGame.Core.DTO.Response;
+using WhotGame.Core.Enums;
 using WhotGame.Core.Models.Requests;
+using WhotGame.Grains;
 using WhotGame.Silo.ViewModels;
 
 namespace WhotGame.Silo.Controllers
@@ -16,24 +21,86 @@ namespace WhotGame.Silo.Controllers
     {
         private readonly IGrainFactory _grainFactory;
         private readonly IRepository<Game> _gameRepo;
+        private readonly IGameService _gameService;
+        private readonly IHubContext<GameHub> _gameHub; 
+        private const int GAME_CARDS_COUNT = 30;
 
-        public GameController(IGrainFactory grainFactory, IHttpContextAccessor httpContext, IRepository<Game> gameRepo)
+        public GameController(IGrainFactory grainFactory,
+            IHttpContextAccessor httpContext,
+            IRepository<Game> gameRepo,
+            IGameService gameService,
+            IHubContext<GameHub> gameHub)
             :base(httpContext)
         { 
             _grainFactory = grainFactory;
             _gameRepo = gameRepo;
+            _gameService = gameService;
+            _gameHub = gameHub;
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> GetConnectionId()
+        {
+            var user = GetCurrentUser();
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: $"connect_player_{user.UserId}");
+        }
+
+        [HttpPost("{group}")]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> SendGroup(long group, PlayerLite player)
+        {
+            await _gameHub.Clients.Group($"connect_game_{group}").SendAsync("Game", player);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
+        }
+
+        [HttpPost("{playerId}")]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> SendPlayer(long playerId, PlayerLite player)
+        {
+            await _gameHub.Clients.Group($"connect_player_{playerId}").SendAsync("player", player);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
+        }
+
+        [HttpPost("{playerId}")]
+        [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+        public async Task<IActionResult> Send(long playerId, PlayerLite player)
+        {
+            await _gameHub.Clients.User($"{playerId}").SendAsync("Testp", player);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<List<GameResponse>>), 200)]
         public async Task<IActionResult> GetGames()
         {
-            //var user = GetCurrentUser();
-            //var player = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
-            //var games = await player.GetGamesAsync();
-            var games = _gameRepo.Get().ToList().Select(x => (GameResponse)x);
+            var games = await _gameService.GetGames();
 
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: games);
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<GameResponse>), 200)]
+        public async Task<IActionResult> GetAvailableGame()
+        {
+            var game = await _gameService.GetAvailableGame();
+            if (game  == null)
+                return ApiResponse<string>(codes:ApiResponseCodes.NOT_FOUND, errors: "Not Found.");
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<GameResponse>), 200)]
+        public async Task<IActionResult> GetMyActiveGame()
+        {
+            var user = GetCurrentUser();
+            var game = await _gameService.GetMyActiveGame(user.UserId);
+            if (game == null)
+                return ApiResponse<string>(codes: ApiResponseCodes.NOT_FOUND, errors: "Not Found.");
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
         }
 
         [HttpGet("{gameId}")]
@@ -48,7 +115,7 @@ namespace WhotGame.Silo.Controllers
         }
 
         [HttpGet("{gameId}")]
-        [ProducesResponseType(typeof(ApiResponse<GameStats>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<PlayerGameScore[]>), 200)]
         public async Task<IActionResult> GetGameLeaderboard(long gameId)
         {
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
@@ -58,14 +125,14 @@ namespace WhotGame.Silo.Controllers
         }
 
         [HttpGet("{gameId}")]
-        [ProducesResponseType(typeof(ApiResponse<Card[]>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<CardResponse[]>), 200)]
         public async Task<IActionResult> GetGameCard(long gameId)
         {
             var user = GetCurrentUser();
             var playerGrain = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
-            var cards = await playerGrain.GetGameCardsAsync(gameId);
+            var cards = (await playerGrain.GetGameCardsAsync(gameId)).Select(x => (CardResponse)x);
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards, totalCount: cards.Length);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: cards, totalCount: cards.Count());
         }
 
         [HttpGet("{gameId}")]
@@ -82,41 +149,49 @@ namespace WhotGame.Silo.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<string>), 200)]
-        public async Task<IActionResult> CreateGame(CreateGameRequest request)
+        public async Task<IActionResult> CreateGame(CreateGameRequest request) //TODO i think this is only for private games
         {
             var user = GetCurrentUser();
-            var playerGrain = _grainFactory.GetGrain<IPlayerGrain>(user.UserId);
 
-            var game = new Game
-            {
-                CreatorId = user.UserId,
-                DateCreated = DateTime.Now,
-                Status = Core.Enums.GameStatus.Created,
-                IsPrivate = request.IsPrivate
-            };
-            _gameRepo.Insert(game);
-            await _gameRepo.SaveChangesAsync();
-
-            game.Name = GenerateGameName(game.Id);
-            await _gameRepo.SaveChangesAsync();
+            var game = await _gameService.CreateGame(user.UserId);            
 
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
-            await gameGrain.CreateGameAsync(user.UserId, request);
+            await gameGrain.StartGameAsync(user.UserId, request);
+            await GameHub.BroadcastNewGame(_gameHub, (GameResponse)game);
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
         }
 
-        private string GenerateGameName(long id)
+        private async Task<GameResponse> SetUpGame(long userId)
         {
-            var alphabets = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            id = 100 + id;
-            var result = "";
+            var game = await _gameService.CreateGame(userId);
 
-            foreach (var c in id.ToString())
+            var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
+            await gameGrain.StartGameAsync(userId, new CreateGameRequest
             {
-                char x = (char)(c + 65);
-                result += alphabets[c % 52];
+                CardCount = GAME_CARDS_COUNT,
+                PlayerIds = Array.Empty<long>()
+            });
+            await GameHub.BroadcastNewGame(_gameHub, (GameResponse)game);
+            return game;
+        }
+
+        [HttpPost()]
+        [ProducesResponseType(typeof(ApiResponse<Game>), 200)]
+        public async Task<IActionResult> JoinGame()
+        {
+            var user = GetCurrentUser();
+            var game = await _gameService.GetGameToJoin(user.UserId);
+
+            if (game == null)
+            {
+                game = await SetUpGame(user.UserId);
             }
-            return result;
+
+            var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
+            var isAddedToGame = await gameGrain.AddPlayerAsync(user.UserId);
+            if (!isAddedToGame)
+                return ApiResponse<string>(codes: ApiResponseCodes.FAILED, errors: "Failed To join Game, try again");
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
         }
 
         [HttpPost("{gameId}")]
@@ -132,26 +207,36 @@ namespace WhotGame.Silo.Controllers
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
         }
 
+        [HttpPost("{gameId}")]
+        [ProducesResponseType(typeof(ApiResponse<Game>), 200)]
+        public async Task<IActionResult> UpdateGameStatus(long gameId, UpdateGameStatus request)//To handle games that are stuck in pending status
+        {
+            await _gameService.UpdateGameStatus(gameId, request);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "");
+        }
+
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<PlayCardRequest>), 200)]
         public async Task<IActionResult> PlayCard(PlayCardRequest model)
         {
             var user = GetCurrentUser();
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(model.GameId);
-            var result = await gameGrain.TryPlayCard(user.UserId, model.CardId, model.CardColor, model.CardShape);
+            CardColor? cardColor = Enum.TryParse(model.CardColor, out CardColor color) ? color : null;
+            CardShape? cardShape = Enum.TryParse(model.CardShape, out CardShape shape) ? shape : null;           
+            var result = await gameGrain.TryPlayCard(user.UserId, model.CardId, cardColor, cardShape);
 
-            return result ? ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "") : ApiResponse(message: "failed", codes: ApiResponseCodes.ERROR, data: "", errors: new string [] {"Failed to play card"} );
+            return result ? ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: "") : ApiResponse(ApiResponseCodes.ERROR, errors: "Failed to play card" );
         }
 
         [HttpPost("{gameId}")]
-        [ProducesResponseType(typeof(ApiResponse<List<Card>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<List<CardResponse>>), 200)]
         public async Task<IActionResult> PickCards(long gameId)
         {
             var user = GetCurrentUser();
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
             var result = await gameGrain.TryPickCardsAsync(user.UserId);
 
-            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: result);
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: result.Select(x => (CardResponse)x));
         }
 
         //[HttpGet("{gameId}")]
@@ -171,6 +256,8 @@ namespace WhotGame.Silo.Controllers
 }
 
 //TODO get endpoint to show game Last Card Played, Last Player, Current Player Turn, How Many Market Remaining Last Activity
+//TODO Keep Track of player games so that if a player refreshes his page we can add him back to his already existing game instead of adding him to a new one.
+//Either add player games to Db when they join game and delete it when the game ends or add this data to playerGrainss
 /*
 #  add Validation for player turn
 # Add logic for special Cards
@@ -199,4 +286,8 @@ that is , 3 + (-1) = 2, and When it is positive we leave as is, that is
 # Joker should need both color and shape
 - Do not allow any action after game has ended //Might not be an issue as it is the winners turn but he has no cards
 # Update Leaderboard endpoint to display winner and order the players according to their total value
-# Add Number of cards to Leaderboard*/
+# Add Number of cards to Leaderboard
+- Look into state management, if the server crashes, the game is supposed to be recovered when server restarts, make sure all state are initiallized in the controller correctly
+
+*/
+

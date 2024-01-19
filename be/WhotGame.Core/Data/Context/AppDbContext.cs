@@ -24,6 +24,7 @@ namespace WhotGame.Core.Data.Context
         public DbSet<UserClaim> UserClaims { get; set; }
         public DbSet<IdentityRoleClaim<long>> RoleClaims { get; set; }
         public DbSet<Game> Games { get; set; }
+        public DbSet<PlayerActiveGame> PlayerActiveGames { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -32,6 +33,9 @@ namespace WhotGame.Core.Data.Context
 
             builder.UseOpenIddict<long>();
             builder.Entity<UserRole>().HasKey(x => new { x.UserId, x.RoleId });
+            builder.Entity<PlayerActiveGame>().HasKey(x => new { x.PlayerId, x.GameId });
+            builder.Entity<PlayerActiveGame>()
+                .HasOne(x => x.Game);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

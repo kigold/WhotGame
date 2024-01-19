@@ -1,6 +1,6 @@
 using Orleans;
 using Orleans.Hosting;
-using WhotGame.Grains;
+using WhoteGame.Services;
 using WhotGame.Silo;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +40,10 @@ builder.Services.AddEFDbContext(builder.Configuration);
 builder.Services.AddRazorPages();
 builder.Services.ConfigureAuthentication(builder.Configuration);
 builder.Services.AddAppSwagger();
+builder.Services.AddSignalR(o =>
+{
+    o.EnableDetailedErrors = true;
+});
 
 var app = builder.Build();
 
@@ -60,9 +64,9 @@ app.UseCors(x =>
 {
     //x.WithOrigins("http://localhost:8080")
     x.AllowAnyOrigin()
-             .AllowAnyMethod()
-             .AllowAnyHeader();
-    //.AllowCredentials();
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+        //.AllowCredentials();
 });
 
 app.UseAuthentication();
@@ -75,5 +79,6 @@ app.UseMiddleware<ErrorHandlerMiddleware>();
 
 app.MapRazorPages();
 app.MapAppControllers();
+app.MapHub<GameHub>("/gameHub");
 
 app.Run();
