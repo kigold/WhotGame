@@ -220,12 +220,12 @@ export class GameComponent {
     })
   }
 
-    setLeaderBoard(){
+     setLeaderBoard(){
       this.isLoading = true;
       console.log("SETTING LeaderBoard for GAMEID: ", this.gameId)
       this.gameService.getLeaderBoard(this.gameId).subscribe({
         next: (response) => {
-          console.log(response.payload);
+          console.log("Leaderboard Response", response.payload);
           this.playersScores= response.payload;
           this.isLoading = false;
         },

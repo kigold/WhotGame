@@ -23,7 +23,7 @@ namespace WhotGame.Silo.Controllers
         private readonly IRepository<Game> _gameRepo;
         private readonly IGameService _gameService;
         private readonly IHubContext<GameHub> _gameHub; 
-        private const int GAME_CARDS_COUNT = 30;
+        private const int GAME_CARDS_COUNT = 1;
 
         public GameController(IGrainFactory grainFactory,
             IHttpContextAccessor httpContext,

@@ -81,6 +81,7 @@ namespace WhoteGame.Services
         {
             var query = _playerActiveGameRepo
                 .Get(x => x.PlayerId == playerId)
+                .Where(x => x.Game.Status == GameStatus.Started || x.Game.Status == GameStatus.Created)
                 .OrderByDescending(x => x.DateCreated)
                 .Include(x => x.Game);
 

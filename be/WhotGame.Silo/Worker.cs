@@ -30,9 +30,9 @@ namespace WhotGame.Silo
         {
             var users = new List<User>
             {
-                new User { Firstname = "Admin", Lastname = "Mainman", Email = "admin@app.com", UserName = "admin@app.com" },
-                new User { Firstname = "Tester", Lastname = "Handyman", Email = "tester@app.com", UserName = "tester@app.com" },
-                new User { Firstname = "IT", Lastname = "Techbabe", Email = "it@app.com", UserName = "it@app.com" },
+                new User { Firstname = "Admin", Lastname = "Mainman", Email = "admin@app.com", UserName = "admin@app.com", Avatar = "avatar-1.png" },
+                new User { Firstname = "Tester", Lastname = "Handyman", Email = "tester@app.com", UserName = "tester@app.com", Avatar = "avatar-2.png" },
+                new User { Firstname = "IT", Lastname = "Techbabe", Email = "it@app.com", UserName = "it@app.com", Avatar = "avatar-3.png" },
             };
             using var scope = _serviceProvider.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();

@@ -370,6 +370,7 @@ namespace WhotGame.Grains
                 player.EndGame(_game.State.Id);
             });
             //Propergate message to FE that the game has ended
+            await _gameService.UpdateGameStatus(_game.State.Id, new UpdateGameStatus { Status = _game.State.Status });
             await GameHub.BroadcastEndGame(_gameHub, _game.State.Id);
         }
 
