@@ -1,6 +1,6 @@
 <div class="container">
   <mat-card>
     <mat-card-title>Game Logs</mat-card-title>
-    <mat-card-content *ngFor="let log of logs">{{log.message}}</mat-card-content>
+    <mat-card-content *ngFor="let log of logs?.reverse()">{{log.id}} | {{log.message}}</mat-card-content>
   </mat-card>
 </div>

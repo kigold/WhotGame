@@ -3,12 +3,14 @@ using WhotGame.Core.Enums;
 using WhotGame.Abstractions.Models;
 using WhotGame.Core.Models.Requests;
 using WhotGame.Core.Data.Models;
+using WhotGame.Core.DTO.Response;
 
 namespace WhotGame.Abstractions.GrainTypes
 {
     public interface IGameGrain : IGrainWithIntegerKey
     {
         Task<GameLite> GetGamesAsync();
+        Task<GameLogResponse> GetGameLogsAsync(int skip, int pageSize);
         Task<GameStats> GetGameStatsAsync();
         Task StartGameAsync(long creatorId, CreateGameRequest request);
         Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount); //Create Game and Send Invitation to players and then start the game

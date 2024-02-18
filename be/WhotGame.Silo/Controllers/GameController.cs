@@ -24,6 +24,7 @@ namespace WhotGame.Silo.Controllers
         private readonly IGameService _gameService;
         private readonly IHubContext<GameHub> _gameHub; 
         private const int GAME_CARDS_COUNT = 1;
+        private const int GAME_LOG_PAGE_SIZE = 1;
 
         public GameController(IGrainFactory grainFactory,
             IHttpContextAccessor httpContext,
@@ -110,6 +111,16 @@ namespace WhotGame.Silo.Controllers
             var user = GetCurrentUser();
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
             var game = await gameGrain.GetGameStatsAsync();
+
+            return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
+        }
+
+        [HttpGet("{gameId}")]
+        [ProducesResponseType(typeof(ApiResponse<GameLog[]>), 200)]
+        public async Task<IActionResult> GetGameLogs(long gameId, [FromQuery]int skip)
+        {
+            var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
+            var game = await gameGrain.GetGameLogsAsync(skip, GAME_LOG_PAGE_SIZE);
 
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
         }
@@ -238,55 +249,21 @@ namespace WhotGame.Silo.Controllers
 
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: result.Select(x => (CardResponse)x));
         }
-
-        //[HttpGet("{gameId}")]
-        //[ProducesResponseType(typeof(ApiResponse<ApprovalRequestResponse>), 200)]
-        //public async Task<IActionResult> GetGameLeaderboard(long gameId)
-        //{
-
-        //}
-
-        //[HttpPost]
-        //[ProducesResponseType(typeof(ApiResponse<ApprovalRequestResponse>), 200)]
-        //public async Task<IActionResult> JoinGame()
-        //{
-
-        //}
     }
 }
 
-//TODO get endpoint to show game Last Card Played, Last Player, Current Player Turn, How Many Market Remaining Last Activity
-//TODO Keep Track of player games so that if a player refreshes his page we can add him back to his already existing game instead of adding him to a new one.
-//Either add player games to Db when they join game and delete it when the game ends or add this data to playerGrainss
 /*
-#  add Validation for player turn
-# Add logic for special Cards
-# Add ReadyPlayers to GameStats
-# Add IsReverse to GameStats
-# Add Status to GameStats
-# Fix lastPlayerId and Name in GameStats
-# Fix Pick card Bug, the card is not added to players cards`
-# Fix Update GameActivity TIme
-# Feat Add End Of Game To GameLOg
-# Add LeaderBoard endpoint
+Feature
+* Implement Timer TO track player turn
+* Add Auto play feature (To simulate playing against an AI)
 
-# Log Activity Time When Game is Started
-# Handle ValidationException and return correct message
+Bugs
 * refactor, Log for play for Gen market b4 picking
 * Check and Test Logic for pick2-4 and rebound
 # FIX CurrentPlayerTurnIndex, it should not have a negative value
  The fix is, when the index negative it should be added to the Length 
 that is , 3 + (-1) = 2, and When it is positive we leave as is, that is
 
-# in Generate Card Make card Id start from 1
-# add and then find modulus
-# Check player turn if it flows correctly
-# check pick 4 increament
-- Joker should not have color or shape// This might not be an issue
-# Joker should need both color and shape
-- Do not allow any action after game has ended //Might not be an issue as it is the winners turn but he has no cards
-# Update Leaderboard endpoint to display winner and order the players according to their total value
-# Add Number of cards to Leaderboard
 - Look into state management, if the server crashes, the game is supposed to be recovered when server restarts, make sure all state are initiallized in the controller correctly
 
 */

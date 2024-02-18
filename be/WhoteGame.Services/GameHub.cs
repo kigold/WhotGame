@@ -46,6 +46,18 @@ namespace WhoteGame.Services
             await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", $"Initing Loading GAME: {gameId}  . . .", (60 * 60));
         }
 
+        /// <summary>
+        /// Set ForAudience to view the game and not participate
+        /// </summary>
+        /// <param name="gameId"></param>
+        /// <returns></returns>
+        public async Task InitGameLog(long gameId)
+        {
+            var gameConnection = GenerateGameConnection(gameId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, gameConnection);
+            await Clients.Client(Context.ConnectionId).SendAsync("LoadGameLogs", $"Initing GAME Logs: {gameId}  . . .", (60 * 60));
+        }
+
         public async Task SeekGame()
         {
             await Clients.Client(Context.ConnectionId).SendAsync("LoadGame", "Game Loading . . .", (60 * 60));

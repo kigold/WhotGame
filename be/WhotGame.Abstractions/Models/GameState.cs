@@ -20,7 +20,8 @@ namespace WhotGame.Abstractions.Models
         public bool PlayerTurnReversed { get; set; }
         public List<Card> PlayedCards { get; set; } = new List<Card>();
         public long LastPlayerId { get; set; }
-        public List<string> GameLog { get; set; } = new List<string>();
+        public List<GameLog> GameLog { get; set; } = new List<GameLog>();
+        public bool PlayerTurnWarningTriggered = false;
     }
 
     public class GameLite
@@ -57,7 +58,7 @@ namespace WhotGame.Abstractions.Models
         public string CurrentPlayerName { get; set; }
         public int MarketCount { get; set; }
         public string Status { get; set; }
-        public List<string> GameLog { get; set; }
+        public List<GameLog> GameLog { get; set; }
         public bool IsTurnReversed { get; set; }
         public PlayerLite[] Players { get; set; }
         public int Pick2Count { get; set; }

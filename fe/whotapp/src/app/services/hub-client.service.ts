@@ -64,6 +64,21 @@ export class HubClientService implements BaseService {
     }
   }
 
+  //For AUdience to Connect to game to get logs
+  initGameLog(gameId: number){
+    if (this.conn.state == HubConnectionState.Disconnected){
+        this.conn.start().then(() => {
+          console.log("SignalR Connected!");
+          this.conn.invoke("InitGameLog", gameId);
+        }).catch((err) => {
+          this.handleError(err)
+        })
+    }
+    else{
+      this.conn.invoke("InitGameLog", gameId);
+    }
+  }
+
   gameCallbacks(){
     this.conn.on("LoadGame", (msg: string, timeToWaitInSeconds: number) => {
       console.log("Received LoadGame Broadcast", msg, timeToWaitInSeconds);
@@ -128,6 +143,17 @@ export class HubClientService implements BaseService {
       })
     });
   }
+
+  //For Audience to Load Logs
+  // onLoadGameLogs(): Observable<string>{
+  //   return new Observable<string>(subscriber => {
+  //     this.conn.on("LoadGameLogs", (msg: string, gameId: number) => {
+  //       console.log("Received Load Game Logs Broadcast", gameId);
+  //       subscriber.next(msg);
+  //       subscriber.complete();
+  //     })
+  //   });
+  // }
 
   onCardPlayed(): Observable<Card>{
     return new Observable<Card>(subscriber => {

@@ -2,6 +2,7 @@
 using Orleans;
 using Orleans.Runtime;
 using System.ComponentModel.DataAnnotations;
+using System.Numerics;
 using WhoteGame.Services;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
@@ -23,12 +24,16 @@ namespace WhotGame.Grains
         private readonly ICardService _cardService;
         private List<PlayerLite> _players = new List<PlayerLite>();
         private int _checkInvitationRetry = 3;
-        private IDisposable? _startGameTimer;
+        private IDisposable? _startGameTimer;       
+        private IDisposable? _playerTurnTimer;
         private DateTime _lastActivityTime;
         private int _pick2Multiplier = 0;
         private int _pick4Multiplier = 0;
         private SkipPlayerType _skipPlayer = SkipPlayerType.None;
         private const int MAX_PLAYERS = 10;
+        private const int PLAYER_TURN_TIME_IN_MINUTES = 1;
+        private const bool ENABLE_PLAYER_TURN_TIMER = false;
+
 
         public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
             IGameService gameService,
@@ -75,6 +80,16 @@ namespace WhotGame.Grains
                 Players = _players.ToArray(),
                 Pick2Count = _pick2Multiplier * 2,
                 Pick4Count= _pick4Multiplier * 4,
+            };
+        }
+
+        public async Task<GameLogResponse> GetGameLogsAsync(int skip, int pageSize)
+        {
+            return new GameLogResponse
+            {
+                Logs = _game.State.GameLog.Skip(skip).Take(pageSize).ToArray(),
+                Skip = skip + pageSize,
+                HasMore = skip + pageSize < _game.State.GameLog.Count()
             };
         }
 
@@ -154,6 +169,42 @@ namespace WhotGame.Grains
             await BeginGame();
         }
 
+        private async Task OnPlayerTurnTimerTrigger(object obj)
+        {
+            GameState state = (GameState)obj;
+            var currentPlayerId = state.ReadyPlayerIds[_game.State.CurrentPlayerTurnIndex];
+
+            if (state.PlayerTurnWarningTriggered)//player delay has exceeded the wait period + Grace Period end game
+            {
+                await EndGame(currentPlayerId, true);
+                return;
+            }
+
+            state.PlayerTurnWarningTriggered = true;
+
+            //Set timer for player turn, Send Waring for deplyed response to turn
+            await GameLog($"Player {currentPlayerId} - {_players.FirstOrDefault(x => x.Id == currentPlayerId)} has delayed on their turn, this is the final Warning before Aborting game");
+        }
+
+        private async Task RestartPlayerTurnTimer()
+        {
+            _playerTurnTimer?.Dispose();
+            //Set timer for player turn
+            await InitPlayerTurnTimer();
+        }
+
+        private async Task InitPlayerTurnTimer()
+        {
+            if (!ENABLE_PLAYER_TURN_TIMER)
+                return;
+
+            await GameLog($"Player Turn Timer {PLAYER_TURN_TIME_IN_MINUTES} Minutes");
+            _game.State.PlayerTurnWarningTriggered = false;
+            //Set timer for player turn
+            //_playerTurnTimer = RegisterTimer(OnPlayerTurnTimerTrigger, _game.State, TimeSpan.FromMinutes(PLAYER_TURN_TIME_IN_MINUTES), TimeSpan.FromMinutes(PLAYER_TURN_TIME_IN_MINUTES));
+            _playerTurnTimer = RegisterTimer(OnPlayerTurnTimerTrigger, _game.State, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(20));
+        }
+
         public async Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount)
         {
             //Init Game
@@ -200,10 +251,14 @@ namespace WhotGame.Grains
                 _lastActivityTime = DateTime.UtcNow;
                 await GameHub.BroadcastStartGame(_gameHub, _game.State.Id);
                 await _gameService.UpdateGameStatus(_game.State.Id, new UpdateGameStatus { Status = _game.State.Status });
+
+                //Set timer for player turn
+                await InitPlayerTurnTimer();
             }
             else
             {
                 //_game.State.Status = GameStatus.Aborted;
+                await GameLog($"Game Aborted because of insufficient players");
                 await GameHub.BroadcastAbortGame(_gameHub, _game.State.Id);
                 _game.State.PlayerIds.ForEach(async x => await  _gameService.RemovePlayerFromGame(x, _game.State.Id));
             }
@@ -240,12 +295,12 @@ namespace WhotGame.Grains
             {
                 case PICK2:
                     {
-                        cardsToPickCount = 2 * _pick2Multiplier;
+                        cardsToPickCount = _pick2Multiplier == 0 ? 1 : 2 * _pick2Multiplier;
                         break;
                     }
                 case PICK4:
                     {
-                        cardsToPickCount = 4 * _pick4Multiplier;
+                        cardsToPickCount = _pick4Multiplier == 0 ? 1 : 4 * _pick4Multiplier;
                         break;
                     }
             }
@@ -353,25 +408,39 @@ namespace WhotGame.Grains
 
         private async Task GameLog(string message, CardColor? color = null)
         {
-            _game.State.GameLog.Add(message);
+            Console.WriteLine(message);
+            _game.State.GameLog.Add(new GameLog(_game.State.GameLog.Count + 1, message, color.ToString()));
             var id = _game.State.GameLog.Count + 1;
             await GameHub.BroadcastGameLog(_gameHub, _game.State.Id, new GameLog { Id = id, Message = message, Color = color.ToString() });
         }
 
-        private async Task EndGame(long playerId)
+        private async Task EndGame(long playerId, bool playerAbandonedGame = false)
         {
-            _game.State.GameLog.Add($"Game Won by Player {playerId}");
-            _game.State.Status = GameStatus.Ended;
-            _game.State.WinnerId = playerId;
+            var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
+            if (playerAbandonedGame)// If player abandoned game by not playing within the specified time for each player turn
+            {
+                await GameLog($"Player Abandoned game {playerId} - {(await player.GetPlayerAsync()).Name}");
+                _game.State.Status = GameStatus.Aborted;
+            }
+            else
+            {
+                await GameLog($"Game has Ended, Game was Won by Player {playerId} - {(await player.GetPlayerAsync()).Name}");
+                _game.State.Status = GameStatus.Ended;
+                _game.State.WinnerId = playerId;
+            }
             //cleanup after game ends
             _game.State.ReadyPlayerIds.ForEach(x =>
             {
                 var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
                 player.EndGame(_game.State.Id);
             });
-            //Propergate message to FE that the game has ended
+            //Propagate message to FE that the game has ended
             await _gameService.UpdateGameStatus(_game.State.Id, new UpdateGameStatus { Status = _game.State.Status });
             await GameHub.BroadcastEndGame(_gameHub, _game.State.Id);
+
+            //dispose all timers
+            _startGameTimer?.Dispose();
+            _playerTurnTimer?.Dispose();
         }
 
         private async Task UpdatePlayerTurn()
@@ -399,10 +468,15 @@ namespace WhotGame.Grains
             _game.State.CurrentPlayerTurnIndex = _game.State.CurrentPlayerTurnIndex > 0 
                 ? _game.State.CurrentPlayerTurnIndex % _game.State.ReadyPlayerIds.Count :
                 (_game.State.CurrentPlayerTurnIndex + _game.State.ReadyPlayerIds.Count) % _game.State.ReadyPlayerIds.Count;
+
             //TODO send player turn to all players
             await GameHub.BroadcastUpdateTurn(_gameHub, _game.State.Id, _players[_game.State.CurrentPlayerTurnIndex]);
             _skipPlayer = SkipPlayerType.None; //Reset _skipOnrPlayer
+
+            //Reset Player Turn Timer
+            await RestartPlayerTurnTimer();
         }
+
         private async Task PopulateReadyPlayersDetails()
         {
             foreach (var playerId in _game.State.ReadyPlayerIds)
@@ -440,6 +514,7 @@ namespace WhotGame.Grains
         }        
     }
 }
+//TODO Update FE to show proper screen and disable all action when game has ended or is abandoned
 //TODO Broadcast LogMessage for each required action, 
 //TODO Either User ReadyPlayerIds or PlayerIds, not both
 //TODO I might have to move stuff that I need to be persisted to the grain

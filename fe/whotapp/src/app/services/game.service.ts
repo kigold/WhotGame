@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import config from '../config';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { HelperService } from './helper.service';
-import { Game } from '../models/games';
+import { Game, GameLogResponse } from '../models/games';
 import { ResponseModel } from '../models/response';
 import { BaseService } from './baseService';
 import { Card, GameStats, PlayCardRequest, PlayerGameScore } from '../models/card';
@@ -64,6 +64,18 @@ export class GameService implements BaseService {
 		};
 
     return this.httpClient.get<ResponseModel<GameStats>>(this.SERVER_URL + `/api/game/getgamestats/${gameId}`, requestOptions);
+  }
+
+  getGameLogs(gameId: number, skip: number){
+    const requestOptions = {
+			headers: {
+			  'Content-Type': 'application/json',
+			},
+		};
+
+    console.log("Testing Get Logs Endponit", `/api/game/getgamelogs/${gameId}?skip=${skip}`)
+
+    return this.httpClient.get<ResponseModel<GameLogResponse>>(this.SERVER_URL + `/api/game/getgamelogs/${gameId}?skip=${skip}`, requestOptions);
   }
 
   getLeaderBoard(gameId: number){

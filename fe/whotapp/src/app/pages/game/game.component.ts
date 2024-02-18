@@ -1,11 +1,11 @@
 import { Component, signal } from '@angular/core';
-import { Game, GameLog } from 'src/app/models/games';
+import { Game, GameLog, GameStats, PlayerGameScore } from 'src/app/models/games';
 import { GameService } from 'src/app/services/game.service';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { HubClientService } from 'src/app/services/hub-client.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { Card, CardOptionRequest, GameStats, PlayerGameScore } from 'src/app/models/card';
+import { Card, CardOptionRequest } from 'src/app/models/card';
 import { Player } from 'src/app/models/player';
 import { HelperService } from 'src/app/services/helper.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -49,12 +49,7 @@ export class GameComponent {
     this.settingUpGame();
     this.setGameStats();
     this.profile = this.authService.getUserProfile();
-    this.gameLogs.set([
-      { id: 1, message: "Simple card1", color: "Red" },
-      { id: 2, message: "Simple card2", color: "Yellow" },
-      { id: 3, message: "Simple card3", color: "Blue" },
-      { id: 4, message: "Simple card4", color: "Green" }
-    ])
+    this.gameLogs.set([])
 
     // this.activatedroute.paramMap.subscribe(params => {
     //   this.gameId = params.get('id') ?? ""
