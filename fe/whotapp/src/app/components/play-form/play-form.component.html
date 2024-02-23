@@ -1,0 +1,12 @@
+<div class="container">    
+    <h2>Start New Game</h2>
+    <mat-form-field>
+        <mat-label>Select Automated Response Level</mat-label>
+        <mat-select matInput [(ngModel)]="game.gameMode">
+          <mat-option value="None">None</mat-option>
+          <mat-option value="Passive">Passive</mat-option>
+          <mat-option value="Offensive">Offensive</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button class="field" mat-raised-button color="primary" (click)="triggerPlay()">Play</button>
+  </div>  

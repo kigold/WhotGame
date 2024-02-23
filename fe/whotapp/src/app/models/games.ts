@@ -9,6 +9,10 @@ export interface Game {
     playerIds: number[]    
 }
 
+export interface GameRequest {
+  gameMode: string
+}
+
 export interface GameLog {
   id: number,
   message: string,
@@ -25,7 +29,8 @@ export interface GameStats {
   lastPlayerId: number,
   currentPlayerId: number,
   lastPlayedCard: Card,
-  players: Player[]
+  players: Player[],
+  aiPlayers: number[]
 }
 
 export interface PlayerGameScore {

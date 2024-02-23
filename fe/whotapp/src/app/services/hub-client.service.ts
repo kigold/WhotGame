@@ -164,6 +164,15 @@ export class HubClientService implements BaseService {
     });
   }
 
+  onSyncCardsForAuto(): Observable<Card[]>{
+    return new Observable<Card[]>(subscriber => {
+      this.conn.on("SyncCardsForAuto", (cards: Card[]) => {
+        console.log("Sync Cards Message", cards);
+        subscriber.next(cards);
+      })
+    });
+  }
+
   onUpdateTurn(): Observable<User>{
     return new Observable<User>(subscriber => {
       this.conn.on("UpdateTurn", (user: User) => {

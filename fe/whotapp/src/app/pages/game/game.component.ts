@@ -69,6 +69,7 @@ export class GameComponent {
     this.onEndGame();
     this.onLoadGame();
     this.onCardPlayed();
+    this.onSyncCardsForAuto();
     this.onUpdateTurn();
     this.onReceivedCards();
     this.onGameLogs();
@@ -126,9 +127,10 @@ export class GameComponent {
       console.log("Ending Game: ", this.gameId, gameId)
       this.isLoading = false;
       //Set Leaderboard
-      this.setLeaderBoard();
-
+      //this.setLeaderBoard();
+      console.log("Routing to Game Score")
       this.hubClient.close();
+      this.router.navigate([`gamescore/${this.gameId}`])
     });
   }
 
@@ -139,19 +141,27 @@ export class GameComponent {
       this.lastPlayedCard.set(card);
     });
   }
+  
+  onSyncCardsForAuto(){
+    const subscriber = this.hubClient.onSyncCardsForAuto();
+    subscriber.subscribe((cards) => {
+      this.cards.set(cards);
+    });
+  }
 
   onReceivedCards(){
     const subscriber = this.hubClient.onReceivedCards();
     subscriber.subscribe((cards) => {
-      console.log("Card Received: ", cards);
       this.cards.set(this.cards().concat(cards));
-      this.pickCardDialogRef = this.dialog.open(PickCardDialogComponent, {
-        data: { cards: cards, message: "Received Cards - General Market" }
-      })
-      this.pickCardDialogRef.componentInstance.closeDialog.subscribe((x) => {
-             console.log("handling Emiting", x);
-             this.pickCardDialogRef.close();
-            })
+      if (!this.gameStats().aiPlayers.includes(this.profile?.id ?? 0)){
+        this.pickCardDialogRef = this.dialog.open(PickCardDialogComponent, {
+          data: { cards: cards, message: "Received Cards - General Market"}
+        })
+        this.pickCardDialogRef.componentInstance.closeDialog.subscribe((x) => {
+              console.log("handling Emiting", x);
+              this.pickCardDialogRef.close();
+              })
+      }
     });
   }
 
@@ -208,25 +218,27 @@ export class GameComponent {
           this.lastPlayedCard.set(response.payload.lastPlayedCard);
         }
         else if (this.gameStats() != undefined && this.gameStats().status == "Ended"){
-          this.setLeaderBoard();
+          //this.setLeaderBoard();
+          this.router.navigate([`gamescore/${this.gameId}`])
         }
+        console.log("SETTING GAME STATS FOR GAMEID: ", this.gameId, this,this.gameStats())
       },
       error: (error) => this.gameService.handleError(error)
     })
   }
 
-     setLeaderBoard(){
-      this.isLoading = true;
-      console.log("SETTING LeaderBoard for GAMEID: ", this.gameId)
-      this.gameService.getLeaderBoard(this.gameId).subscribe({
-        next: (response) => {
-          console.log("Leaderboard Response", response.payload);
-          this.playersScores= response.payload;
-          this.isLoading = false;
-        },
-        error: (error) => this.gameService.handleError(error)
-      })
-  }
+  // setLeaderBoard(){
+  //     this.isLoading = true;
+  //     console.log("SETTING LeaderBoard for GAMEID: ", this.gameId)
+  //     this.gameService.getLeaderBoard(this.gameId).subscribe({
+  //       next: (response) => {
+  //         console.log("Leaderboard Response", response.payload);
+  //         this.playersScores= response.payload;
+  //         this.isLoading = false;
+  //       },
+  //       error: (error) => this.gameService.handleError(error)
+  //     })
+  // }
 
   playCard(card: Card){
     console.log(card);

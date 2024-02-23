@@ -1,3 +1,30 @@
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 3fr 1fr;
+
+  border: #ffffff;
+  border-style: groove;
+}
+
+img {
+  width: 50px;
+}
+span { 
+  margin: auto;
+}
+
 .winner{
-  box-shadow: 10px 10px 5px;
+  overflow: hidden;
+  background: linear-gradient(to right, #fff 20%, #fff 40%, #ECD08C 50%, #ECD08C 55%, #fff 70%, #fff 100%);
+  background-size: 200% auto;
+  
+  animation: shine 1s linear infinite;
+}
+
+/*Begin shimmer code*/
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
 }

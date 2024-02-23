@@ -1,12 +1,8 @@
-<div class="container">
-  <div class="player winner" *ngFor="let player of playerScore.slice(0,1); index as i">
-    <app-player-card [player]="player.player"></app-player-card>
-    {{player.player.name}}
-  </div>
-  <div class="player" *ngFor="let player of playerScore.slice(1); index as i">
-    <app-player-card [player]="player.player"></app-player-card>
-    {{"# " + i+1}}
-    {{player.player.name}}
-    {{player.totalCardsValue}}
-  </div>
+<div class="container" [ngClass]="playerScore.isWinner == true ? 'winner' : ''">
+  <span>{{position + 1}}</span>
+  <img mat-card-image src="/assets/img/avatar/{{playerScore.player.avatar}}">
+  <mat-card>
+    <mat-card-content>{{playerScore.player.name}}</mat-card-content>
+  </mat-card>
+  <span matTooltip="Total remaining card value" matTooltipPosition="right">{{playerScore.totalCardsValue}}</span>
 </div>

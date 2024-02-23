@@ -1,0 +1,3 @@
+<mat-progress-bar [ngStyle]="{'visibility': isLoading ? 'visible' : 'hidden'}" mode="query"></mat-progress-bar>
+<app-game-leader-board *ngFor="let player of playersScores; index as i" [playerScore]="player" [position]="i"></app-game-leader-board>
+  

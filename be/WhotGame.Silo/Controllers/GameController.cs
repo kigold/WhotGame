@@ -261,8 +261,6 @@ namespace WhotGame.Silo.Controllers
 
 /*
 Feature
-* Implement Timer TO track player turn
-* Add Auto play feature (To simulate playing against an AI)
 
 Bugs
 * refactor, Log for play for Gen market b4 picking

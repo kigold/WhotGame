@@ -3,13 +3,14 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { LoginComponent } from 'src/app/components/login/login.component';
 import { SignupComponent } from 'src/app/components/signup/signup.component';
 import { LoginRequest, LoginResponseModel, SignupRequest, User } from 'src/app/models/auth';
-import { Game } from 'src/app/models/games';
+import { Game, GameRequest } from 'src/app/models/games';
 import { AuthService } from 'src/app/services/auth.service';
 import { GameService } from 'src/app/services/game.service';
 import { HelperService } from 'src/app/services/helper.service';
 import {MatListModule} from '@angular/material/list';
 import { HubClientService } from 'src/app/services/hub-client.service';
 import { Router } from '@angular/router';
+import { PlayFormComponent } from 'src/app/components/play-form/play-form.component';
 
 @Component({
   selector: 'app-home',
@@ -22,6 +23,7 @@ export class HomeComponent {
   showSignup: boolean = false;
   loginDialogRef: MatDialogRef<LoginComponent, any> = <MatDialogRef<LoginComponent, any>>{}
   signupDialogRef: MatDialogRef<SignupComponent, any> = <MatDialogRef<SignupComponent, any>>{}
+  playDialogRef: MatDialogRef<PlayFormComponent, any> = <MatDialogRef<PlayFormComponent, any>>{}
   loginResponse: LoginResponseModel = <LoginResponseModel>{};
   games = signal(<Game[]>[]);
 
@@ -61,16 +63,33 @@ export class HomeComponent {
         }
       });
 
+      this.gameService.getGames()
+      .subscribe({
+        next: (response) => {
+          console.log("Get Games", response)
+          this.games.set(response.payload)
+        },
+        error: (e) => {
+          console.log("No Active games found.");
+          this.helperService.toast("No Active games found., click on 'PLAY' button")
+        }
+      });
+
       //Listen for New Games and Add to list
       // this.hubClient.connect();
       // this.games = this.hubClient.onNewGame()
     }
   }
 
-  play(){
-    console.log("Initing Game");
+  openPlayDialog(){
+    this.playDialogRef = this.dialog.open(PlayFormComponent)
+    this.playDialogRef.componentInstance.play.subscribe((request: GameRequest) => this.play(request))
+  }
 
-    this.gameService.joinGame()
+  play(request: GameRequest){
+    this.playDialogRef.close();
+
+    this.gameService.joinGame(request)
     .subscribe({
       next: (gameResponse) => {
        console.log("Joining Game: ", gameResponse.payload)

@@ -14,7 +14,9 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatSelectModule} from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table' 
 import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -38,6 +40,8 @@ import { PickCardDialogComponent } from './components/pick-card-dialog/pick-card
 import { JokerOptionsDialogComponent } from './components/joker-options-dialog/joker-options-dialog.component';
 import { GameLeaderBoardComponent } from './components/game-leader-board/game-leader-board.component';
 import { GameLogComponent } from './pages/game-log/game-log.component';
+import { PlayFormComponent } from './components/play-form/play-form.component';
+import { GameScoreComponent } from './pages/game-score/game-score.component';
 
 @NgModule({
   declarations: [
@@ -55,7 +59,9 @@ import { GameLogComponent } from './pages/game-log/game-log.component';
     PickCardDialogComponent,
     JokerOptionsDialogComponent,
     GameLeaderBoardComponent,
-    GameLogComponent
+    GameLogComponent,
+    PlayFormComponent,
+    GameScoreComponent
   ],
   imports: [
     AppRoutingModule,
@@ -79,6 +85,8 @@ import { GameLogComponent } from './pages/game-log/game-log.component';
     MatSelectModule,
     MatSnackBarModule,
     MatToolbarModule,
+    MatTableModule,
+    MatTooltipModule
   ],
   providers: [
     AuthService,

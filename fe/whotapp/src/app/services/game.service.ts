@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import config from '../config';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { HelperService } from './helper.service';
-import { Game, GameLogResponse } from '../models/games';
+import { Game, GameLogResponse, GameRequest, GameStats, PlayerGameScore } from '../models/games';
 import { ResponseModel } from '../models/response';
 import { BaseService } from './baseService';
-import { Card, GameStats, PlayCardRequest, PlayerGameScore } from '../models/card';
+import { Card, PlayCardRequest} from '../models/card';
 
 @Injectable({
   providedIn: 'root'
@@ -88,14 +88,14 @@ export class GameService implements BaseService {
     return this.httpClient.get<ResponseModel<PlayerGameScore[]>>(this.SERVER_URL + `/api/game/getGameLeaderboard/${gameId}`, requestOptions);
   }
 
-  joinGame(){
+  joinGame(request: GameRequest){
     const requestOptions = {
 			headers: {
 			  'Content-Type': 'application/json',
 			},
 		};
 
-    return this.httpClient.post<ResponseModel<Game>>(this.SERVER_URL + '/api/game/joingame', {}, requestOptions);
+    return this.httpClient.post<ResponseModel<Game>>(this.SERVER_URL + '/api/game/joingame', request, requestOptions);
   }
 
   playCard(card: Card, gameId: number){

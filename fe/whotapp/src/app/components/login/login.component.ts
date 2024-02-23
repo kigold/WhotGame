@@ -15,7 +15,7 @@ export class LoginComponent {
     //dialog.open(SignupComponent)
   }
 
-  public model: LoginRequest = {
+  model: LoginRequest = {
     email : "",
     password: ""
   };
