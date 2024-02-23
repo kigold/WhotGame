@@ -91,6 +91,11 @@ namespace WhoteGame.Services
         public static async Task BroadcastCardPlayed(IHubContext<GameHub> context, long gameId, CardResponse card)
         {
             await context.Clients.Group(GenerateGameConnection(gameId)).SendAsync("CardPlayed", card);
+        }        
+        
+        public static async Task BroadcastSyncCardsForAuto(IHubContext<GameHub> context, long gameId, long playerId, CardResponse[] cards) //Sync Cards for auto response players
+        {
+            await context.Clients.Group(GeneratePlayerGameConnection(gameId, playerId)).SendAsync("SyncCardsForAuto", cards);
         }
 
         public static async Task BroadcastReceivedCards(IHubContext<GameHub> context, long gameId, long playerId, CardResponse[] cards)

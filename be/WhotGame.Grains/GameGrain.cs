@@ -2,7 +2,6 @@
 using Orleans;
 using Orleans.Runtime;
 using System.ComponentModel.DataAnnotations;
-using System.Numerics;
 using WhoteGame.Services;
 using WhotGame.Abstractions.Extensions;
 using WhotGame.Abstractions.GrainTypes;
@@ -31,8 +30,8 @@ namespace WhotGame.Grains
         private int _pick4Multiplier = 0;
         private SkipPlayerType _skipPlayer = SkipPlayerType.None;
         private const int MAX_PLAYERS = 10;
-        private const int PLAYER_TURN_TIME_IN_MINUTES = 1;
-        private const bool ENABLE_PLAYER_TURN_TIMER = false;
+        private const int PLAYER_TURN_TIME_IN_MINUTES = 3;
+        private const bool ENABLE_PLAYER_TURN_TIMER = true;
 
 
         public GameGrain([PersistentState("Game", "WhotGame")] IPersistentState<GameState> game,
@@ -78,6 +77,7 @@ namespace WhotGame.Grains
                 Status = _game.State.Status.ToString(),
                 IsTurnReversed = _game.State.PlayerTurnReversed,
                 Players = _players.ToArray(),
+                AIPlayers = _game.State.AIPlayerIds.Keys.ToArray(),
                 Pick2Count = _pick2Multiplier * 2,
                 Pick4Count= _pick4Multiplier * 4,
             };
@@ -174,6 +174,15 @@ namespace WhotGame.Grains
             GameState state = (GameState)obj;
             var currentPlayerId = state.ReadyPlayerIds[_game.State.CurrentPlayerTurnIndex];
 
+            var currentPlayerMode = GameMode.None;
+            _game.State.AIPlayerIds.TryGetValue(currentPlayerId, out currentPlayerMode);
+            //If Current Player enabled Auto response then trigger auto play
+            if (currentPlayerMode != GameMode.None)
+            {
+                await AutoRespond(currentPlayerId, currentPlayerMode);
+                return;
+            }
+
             if (state.PlayerTurnWarningTriggered)//player delay has exceeded the wait period + Grace Period end game
             {
                 await EndGame(currentPlayerId, true);
@@ -198,11 +207,15 @@ namespace WhotGame.Grains
             if (!ENABLE_PLAYER_TURN_TIMER)
                 return;
 
-            await GameLog($"Player Turn Timer {PLAYER_TURN_TIME_IN_MINUTES} Minutes");
+            var currentPlayerMode = GameMode.None;
+            _game.State.AIPlayerIds.TryGetValue(_game.State.ReadyPlayerIds[_game.State.CurrentPlayerTurnIndex], out currentPlayerMode);
+            var player = GrainFactory.GetGrain<IPlayerGrain>(_game.State.ReadyPlayerIds[_game.State.CurrentPlayerTurnIndex]);
+            //var playerTurnTime = TimeSpan.FromMinutes(PLAYER_TURN_TIME_IN_MINUTES);
+            var playerTurnTime = currentPlayerMode != GameMode.None ? TimeSpan.FromSeconds(3) : TimeSpan.FromMinutes(PLAYER_TURN_TIME_IN_MINUTES); //If Currently Player enabled Auto response then remove player turn wait
+            await GameLog($"Player Turn Timer {playerTurnTime.TotalSeconds} Seconds, {(await player.GetPlayerAsync()).Name} playerMode {currentPlayerMode}");
             _game.State.PlayerTurnWarningTriggered = false;
             //Set timer for player turn
-            //_playerTurnTimer = RegisterTimer(OnPlayerTurnTimerTrigger, _game.State, TimeSpan.FromMinutes(PLAYER_TURN_TIME_IN_MINUTES), TimeSpan.FromMinutes(PLAYER_TURN_TIME_IN_MINUTES));
-            _playerTurnTimer = RegisterTimer(OnPlayerTurnTimerTrigger, _game.State, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(20));
+            _playerTurnTimer = RegisterTimer(OnPlayerTurnTimerTrigger, _game.State, playerTurnTime, playerTurnTime);
         }
 
         public async Task<bool> StartGameAsync(long creatorId, long[] playerIds, bool isPrivate, int cardCount)
@@ -245,7 +258,7 @@ namespace WhotGame.Grains
                 _game.State.Cards = await _cardService.GenerateCards();
                 ShareCards(_game.State.ReadyPlayerIds);
                 _game.State.Status = GameStatus.Started;
-                _game.State.PlayedCards.Add(_game.State.Cards.Pop()); //Play First Card From Market
+                await PlayFirstCard();//Play First Card From Market
                 await GameLog($"Put First Card from the Market:- {_game.State.PlayedCards.Last().Name}");
                 await PopulateReadyPlayersDetails();
                 _lastActivityTime = DateTime.UtcNow;
@@ -266,7 +279,19 @@ namespace WhotGame.Grains
             _startGameTimer?.Dispose();
         }
 
-        public async Task<bool> AddPlayerAsync(long playerId)
+        private Task PlayFirstCard()
+        {
+            var card = default(Card);
+            do
+            {
+                card = _game.State.Cards.Pop();
+                _game.State.PlayedCards.Add(card);
+            }
+            while (card.Name == JOKER);
+            return Task.CompletedTask;
+        }
+
+        public async Task<bool> AddPlayerAsync(long playerId, GameMode gameMode = GameMode.None)
         {
             if (_game.State.Status != GameStatus.Created || _game.State.ReadyPlayerIds.Count() >= MAX_PLAYERS)
             {
@@ -277,6 +302,8 @@ namespace WhotGame.Grains
                 //TODO do I really need two list of players? probably for Private game
                 _game.State.PlayerIds.Add(playerId);
                 _game.State.ReadyPlayerIds.Add(playerId);
+                if (gameMode != GameMode.None)
+                    _game.State.AIPlayerIds.Add( playerId, gameMode); //Add Player to AI list to enable automatic plays during player turn
                 var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
                 await player.AddPlayerToGame(_game.State.Id);
                 return true;
@@ -475,6 +502,80 @@ namespace WhotGame.Grains
 
             //Reset Player Turn Timer
             await RestartPlayerTurnTimer();
+        }
+
+        private async Task AutoRespond(long playerId, GameMode gameMode)
+        {
+            var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
+            var lastPlayedCard = _game.State.PlayedCards.Last();
+            var cardToPlay = default(Card);
+
+            var cards = await player.GetGameCardsAsync(_game.State.Id);
+            var playableCards = cards.Where(x => x.Name == lastPlayedCard.Name || x.Shape == lastPlayedCard.Shape || x.Color == lastPlayedCard.Color || x.Name == JOKER).ToList();
+
+            //Retaliate if the Last Played card is pick2 or pick and if the player has the required card
+            if (_pick2Multiplier > 0 && playableCards.Any(x => x.Name == PICK2))
+            {
+                cardToPlay = playableCards.First(x => x.Name == PICK2);
+                await ProcessAutoResponse(playerId, cardToPlay);
+                return;
+            }
+
+            if (_pick4Multiplier > 0 && playableCards.Any(x => x.Name == PICK4))
+            {
+                cardToPlay = playableCards.First(x => x.Name == PICK4);
+                await ProcessAutoResponse(playerId, cardToPlay);
+                return;
+            }
+
+            if (_pick4Multiplier > 0 || _pick2Multiplier > 0)
+            {
+                //If the card played is PIKC2 or PICK4 and no card to retaliate, then must pick the cards
+                await ProcessAutoResponse(playerId, default, true);
+                return;
+            }
+
+            if (gameMode == GameMode.Offensive && playableCards.Any(x => x.Name == PICK4 || x.Name == PICK2 || x.Name == GENERAL_MARKET))
+            {
+                //TODO Check if it a 2 player game, if yes, then check if player has a follow up card
+                cardToPlay = playableCards.First(x => x.Name == PICK4 || x.Name == PICK2 || x.Name == GENERAL_MARKET);
+                await ProcessAutoResponse(playerId, cardToPlay);
+                return;
+            }
+
+            if (playableCards.Count() > 0)
+            {
+                //play random card
+                Random rnd = new Random();
+                var r = rnd.Next(playableCards.Count());
+                cardToPlay = playableCards[r];
+                //Set CardColor and Shape for Joker
+                if (cardToPlay.Name == JOKER)
+                {
+                    var a = cards.Where(x => x.Name != JOKER).FirstOrDefault();
+                    cardToPlay.Color = a?.Color ?? CardColor.Blue;
+                    cardToPlay.Shape = a?.Shape ?? CardShape.Star;
+                }
+                await ProcessAutoResponse(playerId, cardToPlay);
+                return;
+            }
+
+            //TODO add logic to combine Cards, like HOld UP General Market etc
+
+            //If we do not have any card to play then pick
+            await ProcessAutoResponse(playerId, default, true);
+        }
+
+        private async Task ProcessAutoResponse(long playerId, Card? cardToPlay, bool pickCard = false)
+        {
+            if (!pickCard)
+                await TryPlayCard(playerId, cardToPlay.Id, cardToPlay.Color, cardToPlay.Shape);
+            else
+                await TryPickCardsAsync(playerId);
+
+            //Broadcast message to update Cards, for monitoring sake
+            var player = GrainFactory.GetGrain<IPlayerGrain>(playerId);
+            await GameHub.BroadcastSyncCardsForAuto(_gameHub, _game.State.Id, playerId, (await player.GetGameCardsAsync(_game.State.Id)).Select(x => (CardResponse)x).ToArray());
         }
 
         private async Task PopulateReadyPlayersDetails()

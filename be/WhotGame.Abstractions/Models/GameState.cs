@@ -10,6 +10,7 @@ namespace WhotGame.Abstractions.Models
         public string Name { get; set; } = string.Empty;
         public DateTime Created { get; set; }
         public GameStatus Status { get; set; }
+        public Dictionary<long, GameMode> AIPlayerIds { get; set; } = new Dictionary<long, GameMode>();
         public List<long> PlayerIds { get; set; } = new List<long>();
         public List<long> ReadyPlayerIds { get; set; } = new List<long>();
         public long CreatorId { get; set; }
@@ -61,6 +62,7 @@ namespace WhotGame.Abstractions.Models
         public List<GameLog> GameLog { get; set; }
         public bool IsTurnReversed { get; set; }
         public PlayerLite[] Players { get; set; }
+        public long[] AIPlayers { get; set; }
         public int Pick2Count { get; set; }
         public int Pick4Count { get; set; }
     }

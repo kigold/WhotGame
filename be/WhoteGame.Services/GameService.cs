@@ -11,6 +11,7 @@ namespace WhoteGame.Services
     {
         Task<GameResponse?> GetGameToJoin(long userId);
         Task<GameResponse[]> GetGames();
+        Task<GameResponse> GetGame(long id);
         Task<GameResponse?> GetAvailableGame();
         Task<GameResponse?> GetMyActiveGame(long playerId);
         Task<GameResponse> CreateGame(long userId);
@@ -28,10 +29,15 @@ namespace WhoteGame.Services
             _playerActiveGameRepo = playerActiveGameRepo;
         }
 
+        public async Task<GameResponse> GetGame(long id)
+        {
+            return _gameRepo.GetByID(id);
+        }
+
         public async Task<GameResponse[]> GetGames()
         {
             return _gameRepo.Get().ToList()
-                    .Where(x => x.Status == GameStatus.Created)
+                    .Where(x => x.Status == GameStatus.Created || x.Status == GameStatus.Started)
                 .OrderByDescending(x => x.DateCreated)
                 .Select(x => (GameResponse)x).ToArray();
         }

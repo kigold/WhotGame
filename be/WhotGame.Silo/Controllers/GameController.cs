@@ -23,7 +23,7 @@ namespace WhotGame.Silo.Controllers
         private readonly IRepository<Game> _gameRepo;
         private readonly IGameService _gameService;
         private readonly IHubContext<GameHub> _gameHub; 
-        private const int GAME_CARDS_COUNT = 1;
+        private const int GAME_CARDS_COUNT = 5;
         private const int GAME_LOG_PAGE_SIZE = 1;
 
         public GameController(IGrainFactory grainFactory,
@@ -129,6 +129,12 @@ namespace WhotGame.Silo.Controllers
         [ProducesResponseType(typeof(ApiResponse<PlayerGameScore[]>), 200)]
         public async Task<IActionResult> GetGameLeaderboard(long gameId)
         {
+            var game = await _gameService.GetGame(gameId);
+            if (game == null)
+                return ApiResponse<PlayerGameScore[]>(message: "Success", codes: ApiResponseCodes.NOT_FOUND);
+            if (game.Status != "Ended")
+                return ApiResponse<PlayerGameScore[]>(message: game.Status == "Started" ? "Game has not ended" : "Nothing to show", codes: ApiResponseCodes.OK);
+
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(gameId);
             var gameLeaderboard = await gameGrain.GetGameLeaderboardAsync();
 
@@ -180,7 +186,7 @@ namespace WhotGame.Silo.Controllers
             await gameGrain.StartGameAsync(userId, new CreateGameRequest
             {
                 CardCount = GAME_CARDS_COUNT,
-                PlayerIds = Array.Empty<long>()
+                PlayerIds = Array.Empty<long>(),
             });
             await GameHub.BroadcastNewGame(_gameHub, (GameResponse)game);
             return game;
@@ -188,7 +194,7 @@ namespace WhotGame.Silo.Controllers
 
         [HttpPost()]
         [ProducesResponseType(typeof(ApiResponse<Game>), 200)]
-        public async Task<IActionResult> JoinGame()
+        public async Task<IActionResult> JoinGame([FromBody]JoinGameRequest request)
         {
             var user = GetCurrentUser();
             var game = await _gameService.GetGameToJoin(user.UserId);
@@ -199,7 +205,8 @@ namespace WhotGame.Silo.Controllers
             }
 
             var gameGrain = _grainFactory.GetGrain<IGameGrain>(game.Id);
-            var isAddedToGame = await gameGrain.AddPlayerAsync(user.UserId);
+            GameMode gameMode = Enum.TryParse(request.GameMode, out gameMode) ? gameMode : GameMode.None;
+            var isAddedToGame = await gameGrain.AddPlayerAsync(user.UserId, gameMode);
             if (!isAddedToGame)
                 return ApiResponse<string>(codes: ApiResponseCodes.FAILED, errors: "Failed To join Game, try again");
             return ApiResponse(message: "Success", codes: ApiResponseCodes.OK, data: game);
