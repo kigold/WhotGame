@@ -58,7 +58,6 @@ export class HomeComponent {
           }
         },
         error: (e) => {
-          console.log("No Active games found.");
           this.helperService.toast("No Active games found., click on 'PLAY' button")
         }
       });
@@ -70,7 +69,6 @@ export class HomeComponent {
           this.games.set(response.payload)
         },
         error: (e) => {
-          console.log("No Active games found.");
           this.helperService.toast("No Active games found., click on 'PLAY' button")
         }
       });

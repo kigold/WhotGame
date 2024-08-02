@@ -13,19 +13,31 @@ export class HeaderInterceptor implements HttpInterceptor {
 
   constructor(private authService: AuthService) {}
 
+  private attemptingRefreshingToken: boolean = false;
+
   intercept(httpRequest: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> | any{
       return this.handle(httpRequest, next);
   }
 
   async handle(httpRequest: HttpRequest<any>, next: HttpHandler){
-    if (httpRequest.url.includes("connect/token"))
+    //IF Token has expired and refresh token is not valid
+    if (this.attemptingRefreshingToken){
+      this.attemptingRefreshingToken = false;
+      this.authService.logout();
+      return
+
+    }
+    if (httpRequest.url.includes("connect/token")){
       return lastValueFrom(next.handle(httpRequest));
+    }
 
     let jwt;
     if (this.authService.isTokenExpired()){
+      this.attemptingRefreshingToken = true;
       var tokenResponse = await lastValueFrom(this.authService.refreshAccessToken());
       this.authService.storeAuthInLocalStorage(tokenResponse);
       jwt = tokenResponse.access_token;
+      this.attemptingRefreshingToken = false;
     }
     else{
         jwt = this.authService.getToken();
