@@ -1,3 +1,55 @@
+<div class="navbar bg-base-300 drawer">
+  <div class="flex-1">
+      <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content">
+        <!-- Page content here -->
+        <label for="my-drawer" class="btn btn-square btn-ghost drawer-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            class="inline-block h-5 w-5 stroke-current">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </label>
+      </div>
+      <div class="drawer-side">
+        <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+        <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
+          <!-- Sidebar content here -->
+          <li><a>Sidebar Item 1</a></li>
+          <li><a>Sidebar Item 2</a></li>
+        </ul>
+      </div>
+    <a routerLink="/home" class="btn btn-ghost text-xl">{{title}}</a>
+  </div>
+  <div class="flex-none gap-2">
+    <span>{{profile.name}}</span>
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+        <div class="w-10 rounded-full">
+          <img
+            alt="{{profile.name}}"
+            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+        </div>
+      </div>
+      <ul
+        tabindex="0"
+        class="menu menu-sm dropdown-content bg-base-2s00 text-neutrsal-600 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+        <li>
+          <a>
+            Profile
+          </a>
+        </li>
+        <li><a>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
 <div class="center">
     <router-outlet></router-outlet>
   </div>
