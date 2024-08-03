@@ -15,7 +15,8 @@ import { BaseService } from './baseService';
 
 export class AuthService implements BaseService {
 
-	private SERVER_URL = config.apiBaseUrl;
+	private SERVER_URL = config.apiBaseUrl;	
+	appname: string = "whotapp";
 	constructor(private httpClient: HttpClient, private helperService: HelperService) { }
 
 	login(payload: LoginRequest){
@@ -36,10 +37,10 @@ export class AuthService implements BaseService {
 	storeAuthInLocalStorage(payload: LoginResponseModel): User{
 		console.log(payload)
 		const user = this.toUser(JWT(payload.access_token));
-		localStorage.setItem('profile', JSON.stringify(user));
-		localStorage.setItem('token', payload.access_token);
-		localStorage.setItem('refresh_token', payload.refresh_token);
-		localStorage.setItem('token_expiry', new Date(new Date().getTime() + ((payload.expires_in/60) * 60000)).toString());
+		this.setStoreItem('profile', JSON.stringify(user));
+		this.setStoreItem('token', payload.access_token);
+		this.setStoreItem('refresh_token', payload.refresh_token);
+		this.setStoreItem('token_expiry', new Date(new Date().getTime() + ((payload.expires_in/60) * 60000)).toString());
 		return user as User;
 	}
 
@@ -53,7 +54,7 @@ export class AuthService implements BaseService {
 		return this.httpClient.post<ResponseModel<SignupResponse>>(this.SERVER_URL + '/api/Authorization/CreateUser', payload, requestOptions);
 	}
 
-	private toUser(u:any): User{
+	toUser(u:any): User{
 		return {
 			id: parseInt(u.sub as string),
 			name: u.name,
@@ -63,28 +64,28 @@ export class AuthService implements BaseService {
 	}
 
 	getUserProfile () {
-		const userString = localStorage.getItem('profile');
+		const userString = this.getStoreItem('profile');
 		if (userString != undefined)
 			return JSON.parse(userString) as User;
 		return undefined;
 	}
 
 	getTokenAndStoreLocally(){
-		let token = localStorage.getItem('token');
+		let token = this.getStoreItem('token');
 		if (!token || this.isTokenExpired())
 		{
 			this.refreshAccessToken();
-      token = localStorage.getItem('token');
+      token = this.getStoreItem('token');
 		}
 		return token;
 	}
 
-  getToken() : string{
-		return localStorage.getItem('token') as string;
+    getToken() : string{
+		return this.getStoreItem('token') as string;
 	}
 
 	isTokenExpired() {
-		const expiryDate = localStorage.getItem('token_expiry');
+		const expiryDate = this.getStoreItem('token_expiry');
 		if (!expiryDate)
 			return true;
 
@@ -99,7 +100,7 @@ export class AuthService implements BaseService {
 			},
 		};
 
-		const refresh_token = localStorage.getItem('refresh_token');
+		const refresh_token = this.getStoreItem('refresh_token');
 		const formPayload = new URLSearchParams();
 		formPayload.append('grant_type', 'refresh_token');
 		formPayload.append('refresh_token', refresh_token as string);
@@ -121,7 +122,7 @@ export class AuthService implements BaseService {
 			},
 		};
 
-		const refresh_token = localStorage.getItem('refresh_token');
+		const refresh_token = this.getStoreItem('refresh_token');
 
 		const formPayload = new URLSearchParams();
 		formPayload.append('grant_type', 'refresh_token');
@@ -131,11 +132,23 @@ export class AuthService implements BaseService {
 	}
 
 	logout() {
-		localStorage.removeItem('profile');
-		localStorage.removeItem('token');
-		localStorage.removeItem('refresh_token');
-		localStorage.removeItem('token_expiry');
+		this.removeStoreItem('profile');
+		this.removeStoreItem('token');
+		this.removeStoreItem('refresh_token');
+		this.removeStoreItem('token_expiry');
 		window.location.reload();
+	}
+
+	getStoreItem(key: string){
+		return localStorage.getItem(`${this.appname}-${key}`)
+	}
+
+	setStoreItem(key: string, value: string){
+		localStorage.setItem(`${this.appname}-${key}`, value);
+	}
+
+	removeStoreItem(key: string){
+		localStorage.removeItem(`${this.appname}-${key}`);
 	}
 
 	handleError(error: HttpErrorResponse) {

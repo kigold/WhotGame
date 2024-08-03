@@ -33,7 +33,11 @@ export class HeaderInterceptor implements HttpInterceptor {
 
     let jwt;
     if (this.authService.isTokenExpired()){
-      this.attemptingRefreshingToken = true;
+
+      if (httpRequest.url.includes("connect/token")){        
+        this.attemptingRefreshingToken = true;
+      }
+
       var tokenResponse = await lastValueFrom(this.authService.refreshAccessToken());
       this.authService.storeAuthInLocalStorage(tokenResponse);
       jwt = tokenResponse.access_token;
